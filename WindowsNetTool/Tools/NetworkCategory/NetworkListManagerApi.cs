@@ -33,14 +33,27 @@ namespace WindowsNetTool.Tools.NetworkCategory
 		void SetDescription([MarshalAs(UnmanagedType.BStr)] string szDescription);
 		Guid GetNetworkId();
 		int GetDomainType();
-		[return: MarshalAs(UnmanagedType.IUnknown)]
-		object GetNetworkConnections();
+		[return: MarshalAs(UnmanagedType.Interface)]
+		IEnumNetworkConnections GetNetworkConnections();
 		void GetTimeCreatedAndConnected(out uint pdwLowDateTimeCreated, out uint pdwHighDateTimeCreated, out uint pdwLowDateTimeConnected, out uint pdwHighDateTimeConnected);
 		bool IsConnectedToInternet { get; }
 		bool IsConnected { get; }
 		int GetConnectivity();
 		NlmNetworkCategory GetCategory();
 		void SetCategory(NlmNetworkCategory newCategory);
+	}
+
+	[ComImport, Guid("DCB00005-570F-4A9B-8D69-199FDBA5723B"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
+	public interface INetworkConnection
+	{
+		[return: MarshalAs(UnmanagedType.Interface)]
+		INetwork GetNetwork();
+		bool IsConnectedToInternet { get; }
+		bool IsConnected { get; }
+		int GetConnectivity();
+		Guid GetConnectionId();
+		Guid GetAdapterId();
+		int GetDomainType();
 	}
 
 	[ComImport, Guid("DCB00003-570F-4A9B-8D69-199FDBA5723B"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
@@ -53,6 +66,18 @@ namespace WindowsNetTool.Tools.NetworkCategory
 		void Reset();
 		[return: MarshalAs(UnmanagedType.Interface)]
 		IEnumNetworks Clone();
+	}
+
+	[ComImport, Guid("DCB00006-570F-4A9B-8D69-199FDBA5723B"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
+	public interface IEnumNetworkConnections
+	{
+		[return: MarshalAs(UnmanagedType.IUnknown)]
+		object GetNewEnum(); // propget _NewEnum
+		void Next(uint celt, [Out, MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.Interface, SizeParamIndex = 0)] INetworkConnection[] rgelt, ref uint pceltFetched);
+		void Skip(uint celt);
+		void Reset();
+		[return: MarshalAs(UnmanagedType.Interface)]
+		IEnumNetworkConnections Clone();
 	}
 
 	[ComImport, Guid("DCB00000-570F-4A9B-8D69-199FDBA5723B"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
@@ -78,7 +103,7 @@ namespace WindowsNetTool.Tools.NetworkCategory
 
 	/// <summary>
 	/// A snapshot of one network from the Network List Manager, retaining the underlying
-	/// COM object so the category can be changed later.
+	/// COM object so the network can be modified later.
 	/// </summary>
 	public class NetworkInfo
 	{
@@ -102,6 +127,23 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			network.SetCategory(category);
 			Category = category;
 		}
+
+		public void Rename(string newName)
+		{
+			network.SetName(newName);
+			Name = newName;
+		}
+	}
+
+	/// <summary>
+	/// Describes the network which owns a particular network adapter.
+	/// </summary>
+	public class AdapterNetwork
+	{
+		public Guid AdapterId;
+		public string NetworkName;
+		/// <summary>UTC time the network was last connected, or DateTime.MinValue if unknown.</summary>
+		public DateTime ConnectedSinceUtc;
 	}
 
 	public static class NetworkCategoryService
@@ -125,6 +167,65 @@ namespace WindowsNetTool.Tools.NetworkCategory
 				buffer[0] = null;
 			}
 			return result;
+		}
+
+		/// <summary>
+		/// Returns a map of adapter ID (see System.Net.NetworkInformation.NetworkInterface.Id) to the
+		/// connected network which owns that adapter.
+		/// </summary>
+		public static Dictionary<Guid, AdapterNetwork> GetAdapterNetworkMap()
+		{
+			Dictionary<Guid, AdapterNetwork> map = new Dictionary<Guid, AdapterNetwork>();
+			INetworkListManager nlm = (INetworkListManager)new NetworkListManagerClass();
+			IEnumNetworks enumNetworks = nlm.GetNetworks(NlmEnumNetwork.Connected);
+			INetwork[] netBuffer = new INetwork[1];
+			while (true)
+			{
+				uint fetched = 0;
+				enumNetworks.Next(1, netBuffer, ref fetched);
+				if (fetched == 0 || netBuffer[0] == null)
+					break;
+				INetwork network = netBuffer[0];
+				netBuffer[0] = null;
+
+				string name = network.GetName();
+				network.GetTimeCreatedAndConnected(out uint createdLow, out uint createdHigh, out uint connectedLow, out uint connectedHigh);
+				DateTime connectedSince = FileTimeToDateTimeUtc(connectedHigh, connectedLow);
+
+				IEnumNetworkConnections enumConnections = network.GetNetworkConnections();
+				INetworkConnection[] connBuffer = new INetworkConnection[1];
+				while (true)
+				{
+					uint connFetched = 0;
+					enumConnections.Next(1, connBuffer, ref connFetched);
+					if (connFetched == 0 || connBuffer[0] == null)
+						break;
+					Guid adapterId = connBuffer[0].GetAdapterId();
+					connBuffer[0] = null;
+					map[adapterId] = new AdapterNetwork
+					{
+						AdapterId = adapterId,
+						NetworkName = name,
+						ConnectedSinceUtc = connectedSince
+					};
+				}
+			}
+			return map;
+		}
+
+		private static DateTime FileTimeToDateTimeUtc(uint high, uint low)
+		{
+			long fileTime = ((long)high << 32) | low;
+			if (fileTime <= 0)
+				return DateTime.MinValue;
+			try
+			{
+				return DateTime.FromFileTimeUtc(fileTime);
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				return DateTime.MinValue;
+			}
 		}
 
 		public static string GetCategoryText(NlmNetworkCategory category)

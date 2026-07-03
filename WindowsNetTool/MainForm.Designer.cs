@@ -46,7 +46,7 @@ namespace WindowsNetTool
 			//
 			this.splitContainer.Panel1.Controls.Add(this.listBoxTools);
 			this.splitContainer.Panel1MinSize = 120;
-			this.splitContainer.Size = new System.Drawing.Size(884, 561);
+			this.splitContainer.Size = new System.Drawing.Size(984, 681);
 			this.splitContainer.SplitterDistance = 180;
 			this.splitContainer.TabIndex = 0;
 			//
@@ -57,7 +57,7 @@ namespace WindowsNetTool
 			this.listBoxTools.IntegralHeight = false;
 			this.listBoxTools.Location = new System.Drawing.Point(0, 0);
 			this.listBoxTools.Name = "listBoxTools";
-			this.listBoxTools.Size = new System.Drawing.Size(180, 561);
+			this.listBoxTools.Size = new System.Drawing.Size(180, 681);
 			this.listBoxTools.TabIndex = 0;
 			this.listBoxTools.SelectedIndexChanged += new System.EventHandler(this.listBoxTools_SelectedIndexChanged);
 			//
@@ -65,9 +65,9 @@ namespace WindowsNetTool
 			//
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(884, 561);
+			this.ClientSize = new System.Drawing.Size(984, 681);
 			this.Controls.Add(this.splitContainer);
-			this.MinimumSize = new System.Drawing.Size(720, 480);
+			this.MinimumSize = new System.Drawing.Size(960, 720);
 			this.Name = "MainForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "WindowsNetTool";

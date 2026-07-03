@@ -14,4 +14,9 @@
 		<Copyright>Copyright © 2026</Copyright>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<!-- Required for `dynamic` COM interop with Shell.Application (opening native connection dialogs). -->
+		<Reference Include="Microsoft.CSharp" />
+	</ItemGroup>
+
 </Project>

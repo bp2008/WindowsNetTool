@@ -34,6 +34,7 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			this.colInternet = new System.Windows.Forms.ColumnHeader();
 			this.btnCheckAll = new System.Windows.Forms.Button();
 			this.btnRefresh = new System.Windows.Forms.Button();
+			this.btnRenameNetwork = new System.Windows.Forms.Button();
 			this.lblSetChecked = new System.Windows.Forms.Label();
 			this.btnPublic = new System.Windows.Forms.Button();
 			this.btnPrivate = new System.Windows.Forms.Button();
@@ -96,6 +97,17 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			this.btnRefresh.UseVisualStyleBackColor = true;
 			this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
 			//
+			// btnRenameNetwork
+			//
+			this.btnRenameNetwork.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.btnRenameNetwork.Location = new System.Drawing.Point(219, 476);
+			this.btnRenameNetwork.Name = "btnRenameNetwork";
+			this.btnRenameNetwork.Size = new System.Drawing.Size(100, 24);
+			this.btnRenameNetwork.TabIndex = 7;
+			this.btnRenameNetwork.Text = "Rename...";
+			this.btnRenameNetwork.UseVisualStyleBackColor = true;
+			this.btnRenameNetwork.Click += new System.EventHandler(this.btnRenameNetwork_Click);
+			//
 			// lblSetChecked
 			//
 			this.lblSetChecked.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -146,6 +158,7 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			this.Controls.Add(this.listNetworks);
 			this.Controls.Add(this.btnCheckAll);
 			this.Controls.Add(this.btnRefresh);
+			this.Controls.Add(this.btnRenameNetwork);
 			this.Controls.Add(this.lblSetChecked);
 			this.Controls.Add(this.btnPublic);
 			this.Controls.Add(this.btnPrivate);
@@ -164,6 +177,7 @@ namespace WindowsNetTool.Tools.NetworkCategory
 		private System.Windows.Forms.ColumnHeader colInternet;
 		private System.Windows.Forms.Button btnCheckAll;
 		private System.Windows.Forms.Button btnRefresh;
+		private System.Windows.Forms.Button btnRenameNetwork;
 		private System.Windows.Forms.Label lblSetChecked;
 		private System.Windows.Forms.Button btnPublic;
 		private System.Windows.Forms.Button btnPrivate;

@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace WindowsNetTool.Tools.NetworkCategory
 {
-	public partial class NetworkCategoryTool : UserControl
+	public partial class NetworkCategoryTool : UserControl, IRefreshOnActivate
 	{
 		public NetworkCategoryTool()
 		{
@@ -17,6 +17,11 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			base.OnLoad(e);
 			if (!DesignMode)
 				RefreshNetworks();
+		}
+
+		public void RefreshOnActivate()
+		{
+			RefreshNetworks();
 		}
 
 		private void RefreshNetworks()
@@ -85,6 +90,32 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			RefreshNetworks();
 			if (errors.Count > 0)
 				MessageBox.Show(this, string.Join(Environment.NewLine + Environment.NewLine, errors), "Errors", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
+
+		private void btnRenameNetwork_Click(object sender, EventArgs e)
+		{
+			if (listNetworks.SelectedItems.Count == 0)
+			{
+				MessageBox.Show(this, "Select (highlight) a network row in the list first.", "No network selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				return;
+			}
+			ListViewItem item = listNetworks.SelectedItems[0];
+			NetworkInfo network = (NetworkInfo)item.Tag;
+			string newName = TextPromptDialog.Show(FindForm(), "Rename Network", "New name for network \"" + network.Name + "\":", network.Name);
+			if (newName == null)
+				return;
+			newName = newName.Trim();
+			if (newName.Length == 0 || newName == network.Name)
+				return;
+			try
+			{
+				network.Rename(newName);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(this, "Failed to rename network: " + ex.Message, "Rename failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			RefreshNetworks();
 		}
 
 		private void btnCheckAll_Click(object sender, EventArgs e)
