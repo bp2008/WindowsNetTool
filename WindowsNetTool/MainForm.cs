@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Routes;
@@ -28,6 +29,7 @@ namespace WindowsNetTool
 			AddTool("IP Configuration", () => new IpConfigTool());
 			AddTool("Network Category", () => new NetworkCategoryTool());
 			AddTool("Static Routes", () => new RoutesTool());
+			AddTool("Hosts File Editor", () => new HostsFileTool());
 			AddTool("Windows Tools", () => new WindowsToolsTool());
 
 			if (listBoxTools.Items.Count > 0)
@@ -37,6 +39,26 @@ namespace WindowsNetTool
 		private void AddTool(string name, Func<UserControl> factory)
 		{
 			listBoxTools.Items.Add(new ToolEntry { Name = name, Factory = factory });
+		}
+
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			foreach (object listItem in listBoxTools.Items)
+			{
+				ToolEntry entry = listItem as ToolEntry;
+				if (entry != null && entry.Instance is IHasUnsavedChanges dirtyTool && dirtyTool.HasUnsavedChanges)
+				{
+					DialogResult result = MessageBox.Show(this,
+						"\"" + entry.Name + "\" has unsaved changes.  Exit anyway?",
+						"Unsaved changes", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+					if (result != DialogResult.Yes)
+					{
+						e.Cancel = true;
+						break;
+					}
+				}
+			}
+			base.OnFormClosing(e);
 		}
 
 		private void listBoxTools_SelectedIndexChanged(object sender, EventArgs e)

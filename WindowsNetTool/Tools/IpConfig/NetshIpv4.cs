@@ -150,7 +150,9 @@ namespace WindowsNetTool.Tools.IpConfig
 		/// configuration, so this method snapshots existing static addresses and gateways first and
 		/// automatically re-adds any that disappeared.  The interface's current default gateway is
 		/// preserved by passing it to the set address command (otherwise it would be lost along with
-		/// the DHCP lease).
+		/// the DHCP lease).  If the interface obtains DNS servers from DHCP, the current servers are
+		/// preserved by converting them to static DNS configuration (otherwise name resolution would
+		/// silently break, because the "automatic" DNS source yields no servers once DHCP is off).
 		/// </summary>
 		public static DhcpToggleResult DisableDhcp(string interfaceName, IPAddress primaryIp, IPAddress primaryMask)
 		{
@@ -166,11 +168,28 @@ namespace WindowsNetTool.Tools.IpConfig
 			List<Ipv4Address> staticAddresses = iface.IpAddresses.Where(a => a.IsStatic && !a.Ip.Equals(primaryIp)).ToList();
 			IPAddress keepGateway = iface.DefaultGateway;
 			List<Ipv4Gateway> staticGateways = iface.Gateways.Where(g => g.IsStatic && !g.Ip.Equals(keepGateway)).ToList();
+			List<IPAddress> dnsToPreserve = null;
+			if (iface.DnsFromDhcp && iface.DnsServers.Count > 0)
+				dnsToPreserve = new List<IPAddress>(iface.DnsServers);
 
 			string command = "interface ipv4 set address name=\"" + interfaceName + "\" source=static address=" + primaryIp + " mask=" + primaryMask;
 			if (keepGateway != null)
 				command += " gateway=" + keepGateway;
 			Netsh.RunChecked(command);
+
+			if (dnsToPreserve != null)
+			{
+				try
+				{
+					SetDnsServers(interfaceName, dnsToPreserve);
+				}
+				catch (Exception ex)
+				{
+					result.Errors.Add("Failed to preserve the DHCP-provided DNS servers ("
+						+ string.Join(", ", dnsToPreserve.Select(d => d.ToString()))
+						+ ") as static DNS configuration: " + ex.Message);
+				}
+			}
 
 			Thread.Sleep(SettleDelayMs);
 			RestoreMissingStatics(interfaceName, staticAddresses, staticGateways, result);

@@ -8,10 +8,12 @@
 		<RootNamespace>WindowsNetTool</RootNamespace>
 		<AssemblyName>WindowsNetTool</AssemblyName>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<Version>1.0.0</Version>
+		<Version>1.1.0</Version>
 		<Product>WindowsNetTool</Product>
 		<Description>A collection of Windows networking utilities.</Description>
 		<Copyright>Copyright © 2026</Copyright>
+		<AssemblyVersion>1.1.0</AssemblyVersion>
+		<FileVersion>1.1.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

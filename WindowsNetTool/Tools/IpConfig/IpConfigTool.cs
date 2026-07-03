@@ -610,6 +610,8 @@ namespace WindowsNetTool.Tools.IpConfig
 			}
 			if (iface.Gateways.Any(g => g.IsStatic))
 				prompt += Environment.NewLine + Environment.NewLine + "Static gateways will NOT be restored; the DHCP-provided gateway will be used instead.";
+			if (!iface.DnsFromDhcp && iface.DnsServers.Count > 0)
+				prompt += Environment.NewLine + Environment.NewLine + "The static DNS server configuration will remain in effect; DHCP-provided DNS servers will not be used.  (Use the \"Use DHCP DNS\" button to change this.)";
 			if (MessageBox.Show(this, prompt, "Enable DHCP", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
 				return;
 
@@ -674,6 +676,10 @@ namespace WindowsNetTool.Tools.IpConfig
 				+ Environment.NewLine + Environment.NewLine + primaryDescription;
 			if (iface.DefaultGateway != null)
 				prompt += Environment.NewLine + "The current default gateway (" + iface.DefaultGateway + ") will be preserved.";
+			if (iface.DnsFromDhcp && iface.DnsServers.Count > 0)
+				prompt += Environment.NewLine + "The current DNS server" + (iface.DnsServers.Count == 1 ? "" : "s") + " ("
+					+ string.Join(", ", iface.DnsServers.Select(d => d.ToString()))
+					+ ") will be preserved by converting " + (iface.DnsServers.Count == 1 ? "it" : "them") + " to static DNS configuration.";
 			int otherStaticCount = iface.IpAddresses.Count(a => a.IsStatic && !a.Ip.Equals(primaryIp));
 			if (otherStaticCount > 0)
 				prompt += Environment.NewLine + "The other " + otherStaticCount + " static address" + (otherStaticCount == 1 ? "" : "es") + " will be re-added automatically if Windows removes them.";
