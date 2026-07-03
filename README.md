@@ -45,9 +45,15 @@ Open `WindowsNetTool.sln` in Visual Studio 2026, or run `dotnet build` / `msbuil
 ## Limitations
 
 * IPv4 only (for now).
-* Reads network configuration by parsing `netsh` output, which is only produced in English on English-language Windows installations. Non-English systems are not currently supported by the IP Configuration and Static Routes tools.
+* Reads network configuration by parsing `netsh` output, which is only produced in English on English-language Windows installations. Non-English systems are not currently supported by some integrated tools.
 
 ## Future Plans
 
+* Smaller minimum window size to better support tiny displays and virtual machines with poor video drivers.
 * IPv6 support.
-* Smaller minimum window size to better support small displays.
+* Integrate an IP scanner.
+* Integrate a filterable ARP viewer (ARP = address resolution protocol; a way of discovering which MAC addresses own which IP addresses within your LAN).
+* Integrate a simple ping tool.
+* Integrate a simple asynchronous/concurrent traceroute tool (far, far faster than traditional traceroute tools).
+* Integrate simple DNS lookup tools (will be somewhat limited by .NET 4.8 APIs).
+* Include a link to my [PingTracer](https://github.com/bp2008/PingTracer) repository for more advanced network monitoring.
