@@ -34,6 +34,10 @@ Manages persistent IPv4 static routes (routes that survive reboots, via `netsh` 
 
 A continuous ping monitor with output styled after Windows' `ping` command. Enter a host name or IP address and press Start; each reply or timeout is appended to an auto-scrolling log with a timestamp, and running totals (sent / received / lost, min / avg / max round-trip time) are shown below the log. A slider adjusts the ping rate from 1 ping per 10 seconds up to 10 pings per second (default: 1 per second), and can be moved while pinging. Pings are sent concurrently, so a slow or unresponsive host does not reduce the configured ping rate. A Windows-style statistics summary is printed whenever pinging stops, and pinging stops automatically when you switch to a different tool. Other tools can link into the Ping tool, so a future ARP viewer or IP scanner can begin ping monitoring of a selected address with one click.
 
+### DNS Lookup
+
+Looks up DNS records for a domain name and performs reverse (PTR) lookups when an IP address is entered. The default "Auto" mode queries A and AAAA records together (or PTR for an IP address), and a dropdown selects other record types: ANY, CAA, CNAME, MX, NS, PTR, SOA, SRV, and TXT. Because .NET's built-in resolver can neither query a chosen DNS server nor return record types other than address records, the tool implements the DNS wire protocol directly over UDP (with EDNS0, automatic TCP fallback for truncated responses, and automatic non-EDNS retry for old servers) — no third-party libraries and no locale-dependent `nslookup` output parsing. Results include record TTLs, the answer/authority/additional sections, and response metadata (status, response time, transport, authoritative flag). The DNS server to query is chosen from an editable dropdown listing the system's currently registered DNS servers alongside popular public resolvers (Cloudflare, Google, Quad9, OpenDNS), deduplicated, and a custom server IP address can be typed in directly. International (non-ASCII) domain names are converted to punycode automatically.
+
 ### Hosts File Editor
 
 A notepad-like embedded editor for the system hosts file (`C:\Windows\System32\drivers\etc\hosts`). Edits, saves, and reloads the file with unsaved-change warnings, offers to clear the file's read-only attribute when it blocks saving, preserves the file's original text encoding, and includes a one-click DNS cache flush (`ipconfig /flushdns`) so old entries don't linger after editing.
@@ -57,4 +61,3 @@ Open `WindowsNetTool.sln` in Visual Studio 2026, or run `dotnet build` / `msbuil
 * Integrate an IP scanner.
 * Integrate a filterable ARP viewer (ARP = address resolution protocol; a way of discovering which MAC addresses own which IP addresses within your LAN).
 * Integrate a simple asynchronous/concurrent traceroute tool (far, far faster than traditional traceroute tools).
-* Integrate simple DNS lookup tools (will be somewhat limited by .NET 4.8 APIs).

@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.DnsLookup;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
 using WindowsNetTool.Tools.NetworkCategory;
@@ -45,6 +46,7 @@ namespace WindowsNetTool
 			AddTool<NetworkCategoryTool>("Network Category");
 			AddTool<RoutesTool>("Static Routes");
 			AddTool<PingTool>("Ping");
+			AddTool<DnsLookupTool>("DNS Lookup");
 			AddTool<HostsFileTool>("Hosts File Editor");
 			AddTool<LinksTool>("Links / Shortcuts");
 
