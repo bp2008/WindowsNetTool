@@ -222,6 +222,52 @@ namespace WindowsNetTool
 				refreshable.RefreshOnActivate();
 		}
 
+		private const int WM_APPCOMMAND = 0x0319;
+		private const int APPCOMMAND_BROWSER_BACKWARD = 1;
+		private const int APPCOMMAND_BROWSER_FORWARD = 2;
+
+		/// <summary>
+		/// Handles WM_APPCOMMAND to implement back/forward tool navigation.  Windows generates
+		/// this message from mouse X-button clicks (and keyboard Back/Forward keys), and
+		/// DefWindowProc bubbles it up the parent chain from whichever child control was
+		/// clicked, so the form sees it no matter where the mouse is over the window.
+		/// </summary>
+		protected override void WndProc(ref Message m)
+		{
+			if (m.Msg == WM_APPCOMMAND)
+			{
+				// GET_APPCOMMAND_LPARAM: command in the high word, minus the device/key flags.
+				int cmd = ((int)((long)m.LParam >> 16)) & 0x0FFF;
+				if (cmd == APPCOMMAND_BROWSER_BACKWARD || cmd == APPCOMMAND_BROWSER_FORWARD)
+				{
+					NavigateHistory(back: cmd == APPCOMMAND_BROWSER_BACKWARD);
+					m.Result = (IntPtr)1;
+					return;
+				}
+			}
+			base.WndProc(ref m);
+		}
+
+		private void NavigateHistory(bool back)
+		{
+			Stack<ToolEntry> from = back ? backStack : forwardStack;
+			Stack<ToolEntry> to = back ? forwardStack : backStack;
+			if (from.Count == 0)
+				return;
+			ToolEntry target = from.Pop();
+			if (currentToolEntry != null)
+				to.Push(currentToolEntry);
+			navigatingHistory = true;
+			try
+			{
+				listBoxTools.SelectedIndex = listBoxTools.Items.IndexOf(target);
+			}
+			finally
+			{
+				navigatingHistory = false;
+			}
+		}
+
 		private void Panel2_ClientSizeChanged(object sender, EventArgs e)
 		{
 			LayoutActiveTool();
