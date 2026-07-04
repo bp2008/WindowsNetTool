@@ -13,8 +13,20 @@ namespace WindowsNetTool.Tools.Arp
 	/// </summary>
 	public partial class ArpTool : UserControl, IRefreshOnActivate
 	{
+		private class SortKey
+		{
+			public int Column;
+			public bool Descending;
+		}
+
 		private bool busy = false;
 		private List<ArpEntry> allEntries = new List<ArpEntry>();
+		/// <summary>
+		/// The column sort order chosen by clicking column headers, in priority order.  Empty
+		/// until the first click; the list is then in its natural order (interface, then IP),
+		/// which is also the tie-breaker whenever the clicked columns compare equal.
+		/// </summary>
+		private readonly List<SortKey> sortKeys = new List<SortKey>();
 
 		public ArpTool()
 		{
@@ -64,22 +76,32 @@ namespace WindowsNetTool.Tools.Arp
 
 		/// <summary>
 		/// Repopulates the list from the cached entries, keeping only those matching the current
-		/// filter boxes.  Both filters match anywhere within the address; the MAC filter ignores
-		/// separator characters so "aabb", "aa-bb", and "aa:bb" are equivalent.
+		/// filter boxes and applying the current column sort.  Both filters match anywhere within
+		/// the address; the MAC filter ignores separator characters so "aabb", "aa-bb", and
+		/// "aa:bb" are equivalent.
 		/// </summary>
 		private void ApplyFilter()
 		{
 			string ipFilter = txtFilterIp.Text.Trim();
 			string macFilter = NormalizeMacFilter(txtFilterMac.Text);
 			string previousSelection = listArp.SelectedItems.Count > 0 ? ((ArpEntry)listArp.SelectedItems[0].Tag).IpText : null;
-			listArp.BeginUpdate();
-			listArp.Items.Clear();
+
+			List<ArpEntry> shown = new List<ArpEntry>(allEntries.Count);
 			foreach (ArpEntry entry in allEntries)
 			{
 				if (ipFilter.Length > 0 && entry.IpText.IndexOf(ipFilter, StringComparison.Ordinal) < 0)
 					continue;
 				if (macFilter.Length > 0 && entry.MacDigits.IndexOf(macFilter, StringComparison.Ordinal) < 0)
 					continue;
+				shown.Add(entry);
+			}
+			if (sortKeys.Count > 0)
+				shown.Sort(CompareEntries);
+
+			listArp.BeginUpdate();
+			listArp.Items.Clear();
+			foreach (ArpEntry entry in shown)
+			{
 				ListViewItem item = new ListViewItem(new string[]
 				{
 					entry.IpText,
@@ -96,6 +118,67 @@ namespace WindowsNetTool.Tools.Arp
 			lblCount.Text = listArp.Items.Count == allEntries.Count
 				? allEntries.Count + " entries"
 				: listArp.Items.Count + " of " + allEntries.Count + " entries";
+		}
+
+		/// <summary>
+		/// Compares two entries by each clicked sort column in priority order, falling back to
+		/// the natural order (interface name, then IP address) when all of them compare equal.
+		/// </summary>
+		private int CompareEntries(ArpEntry a, ArpEntry b)
+		{
+			foreach (SortKey key in sortKeys)
+			{
+				int c = CompareByColumn(a, b, key.Column);
+				if (c != 0)
+					return key.Descending ? -c : c;
+			}
+			int n = string.Compare(a.InterfaceName, b.InterfaceName, StringComparison.OrdinalIgnoreCase);
+			return n != 0 ? n : a.IpSortKey.CompareTo(b.IpSortKey);
+		}
+
+		private static int CompareByColumn(ArpEntry a, ArpEntry b, int column)
+		{
+			switch (column)
+			{
+				case 0: return a.IpSortKey.CompareTo(b.IpSortKey); // IP Address, numerically
+				case 1: return string.Compare(a.MacDigits, b.MacDigits, StringComparison.Ordinal); // MAC Address
+				case 2: return string.Compare(a.InterfaceName, b.InterfaceName, StringComparison.OrdinalIgnoreCase); // Interface
+				case 3: return string.Compare(a.State, b.State, StringComparison.Ordinal); // State
+				default: return 0;
+			}
+		}
+
+		private void listArp_ColumnClick(object sender, ColumnClickEventArgs e)
+		{
+			SortKey existing = sortKeys.Find(k => k.Column == e.Column);
+			if ((ModifierKeys & Keys.Shift) == Keys.Shift)
+			{
+				// Shift+click adds the column as a further sort level, or reverses it if it is
+				// already one.
+				if (existing != null)
+					existing.Descending = !existing.Descending;
+				else
+					sortKeys.Add(new SortKey { Column = e.Column });
+			}
+			else
+			{
+				// A plain click sorts by just this column: ascending first, reversed when it is
+				// already the primary sort column.
+				bool descending = sortKeys.Count > 0 && sortKeys[0].Column == e.Column && !sortKeys[0].Descending;
+				sortKeys.Clear();
+				sortKeys.Add(new SortKey { Column = e.Column, Descending = descending });
+			}
+			ApplyFilter();
+			UpdateSortArrows();
+		}
+
+		private void UpdateSortArrows()
+		{
+			for (int i = 0; i < listArp.Columns.Count; i++)
+			{
+				SortKey key = sortKeys.Find(k => k.Column == i);
+				ListViewSortArrows.SetSortArrow(listArp, i, key == null ? (bool?)null : key.Descending);
+			}
 		}
 
 		/// <summary>

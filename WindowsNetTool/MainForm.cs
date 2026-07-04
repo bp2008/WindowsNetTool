@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
 using WindowsNetTool.Tools.DnsLookup;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
+using WindowsNetTool.Tools.IpScanner;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
@@ -28,6 +30,15 @@ namespace WindowsNetTool
 
 		private UserControl activeTool;
 		private readonly AppSettings settings;
+
+		// Browser-style tool selection history, navigated with the mouse's back/forward
+		// buttons (or a keyboard's Back/Forward media keys).  Selecting a tool by any other
+		// means pushes the previous tool onto backStack and clears forwardStack, exactly
+		// like following a link in a web browser.
+		private readonly Stack<ToolEntry> backStack = new Stack<ToolEntry>();
+		private readonly Stack<ToolEntry> forwardStack = new Stack<ToolEntry>();
+		private ToolEntry currentToolEntry;
+		private bool navigatingHistory;
 
 		public MainForm()
 		{
@@ -53,6 +64,7 @@ namespace WindowsNetTool
 			AddTool<PingTool>("Ping");
 			AddTool<DnsLookupTool>("DNS Lookup");
 			AddTool<ArpTool>("ARP Viewer");
+			AddTool<IpScannerTool>("IP Scanner");
 			AddTool<HostsFileTool>("Hosts File Editor");
 			AddTool<LinksTool>("Links / Shortcuts");
 
@@ -181,6 +193,16 @@ namespace WindowsNetTool
 			ToolEntry entry = listBoxTools.SelectedItem as ToolEntry;
 			if (entry == null)
 				return;
+			if (entry != currentToolEntry)
+			{
+				if (!navigatingHistory)
+				{
+					if (currentToolEntry != null)
+						backStack.Push(currentToolEntry);
+					forwardStack.Clear();
+				}
+				currentToolEntry = entry;
+			}
 			bool created = false;
 			if (entry.Instance == null)
 			{

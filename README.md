@@ -40,7 +40,11 @@ Looks up DNS records for a domain name and performs reverse (PTR) lookups when a
 
 ### ARP Viewer
 
-Displays the system's ARP table (ARP = address resolution protocol; a way of discovering which MAC addresses own which IP addresses within your LAN). Each entry shows the IP address, MAC address, owning interface, and entry state (Reachable, Stale, Permanent, etc. — more informative than the static/dynamic distinction shown by `arp -a`). Entries can be filtered live by IP address and by MAC address; filters match any part of the address, and the MAC filter accepts `-`, `:`, `.`, or no separators interchangeably. Double-clicking an entry (or pressing the Ping Selected button) jumps to the Ping tool and begins ping monitoring of that address. The table is read through the IP Helper API (`GetIpNetTable2`) rather than by parsing `arp -a` output, so this tool works regardless of the system's display language.
+Displays the system's ARP table (ARP = address resolution protocol; a way of discovering which MAC addresses own which IP addresses within your LAN). Each entry shows the IP address, MAC address, owning interface, and entry state (Reachable, Stale, Permanent, etc. — more informative than the static/dynamic distinction shown by `arp -a`). Entries can be filtered live by IP address and by MAC address; filters match any part of the address, and the MAC filter accepts `-`, `:`, `.`, or no separators interchangeably. Columns sort with standard header behavior: click to sort ascending (IP addresses sort numerically), click again to reverse, and Shift+click to sort by additional columns. Double-clicking an entry (or pressing the Ping Selected button) jumps to the Ping tool and begins ping monitoring of that address. The table is read through the IP Helper API (`GetIpNetTable2`) rather than by parsing `arp -a` output, so this tool works regardless of the system's display language.
+
+### IP Scanner
+
+Discovers the hosts on a subnet. Every address in the subnet is pinged asynchronously with a tunable limit on the number of pings in flight (default 256), and scanning repeats in continuous waves until stopped, so hosts that miss one wave are caught by a later one. The system ARP table is merged into the results each wave, which fills in MAC addresses and also surfaces hosts that don't answer pings (shown with a ping time of "N/A"). Each discovered host is resolved to a name with reverse DNS — but private addresses are only ever looked up on a local DNS server, never sent to a public resolver. Results show the IP address, latest ping round-trip time, host name, MAC address, and the time of the last reply, updated in place without flicker; columns sort with the same header behavior as the ARP Viewer (click to sort, click again to reverse, Shift+click for multi-column). The subnet dropdown is pre-filled with the subnets of the machine's network interfaces, and any subnet down to /16 in size can be typed in CIDR notation. Double-clicking a host jumps to the Ping tool.
 
 ### Hosts File Editor
 
@@ -62,5 +66,4 @@ Open `WindowsNetTool.sln` in Visual Studio 2026, or run `dotnet build` / `msbuil
 ## Future Plans
 
 * IPv6 support.
-* Integrate an IP scanner.
 * Integrate a simple asynchronous/concurrent traceroute tool (far, far faster than traditional traceroute tools).
