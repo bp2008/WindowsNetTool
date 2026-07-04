@@ -32,7 +32,11 @@ Manages persistent IPv4 static routes (routes that survive reboots, via `netsh` 
 
 ### Ping
 
-A continuous ping monitor with output styled after Windows' `ping` command. Enter a host name or IP address and press Start; each reply or timeout is appended to an auto-scrolling log with a timestamp, and running totals (sent / received / lost, min / avg / max round-trip time) are shown below the log. A slider adjusts the ping rate from 1 ping per 10 seconds up to 10 pings per second (default: 1 per second), and can be moved while pinging. Pings are sent concurrently, so a slow or unresponsive host does not reduce the configured ping rate. A Windows-style statistics summary is printed whenever pinging stops, and pinging stops automatically when you switch to a different tool. Other tools can link into the Ping tool; the ARP Viewer uses this to begin ping monitoring of a selected address with one click.
+A continuous ping monitor with output styled after Windows' `ping` command. Enter a host name or IP address and press Start; each reply or timeout is appended to an auto-scrolling log with a timestamp, and running totals (sent / received / lost, min / avg / max round-trip time) are shown below the log. A slider adjusts the ping rate from 1 ping per 10 seconds up to 10 pings per second (default: 1 per second), and can be moved while pinging. Pings are sent concurrently, so a slow or unresponsive host does not reduce the configured ping rate. A Windows-style statistics summary is printed whenever pinging stops, and pinging stops automatically when you switch to a different tool. Other tools can link into the Ping tool; the ARP Viewer, IP Scanner, and Traceroute tools use this to begin ping monitoring of a selected address with one click.
+
+### Traceroute
+
+An asynchronous/concurrent traceroute, far faster than traditional traceroute tools. Instead of probing one hop at a time and waiting for each reply, every TTL from 1 to 30 is probed simultaneously, so the full route to a destination is typically discovered in about one round-trip time. To ride out packet loss, each unanswered hop is re-probed up to 15 times spread evenly across 3 seconds; a hop that has answered is not probed again, and the trace ends as soon as every hop up to the destination has answered. Echo requests carry the same 32-byte payload as Windows' `ping` command. Host names are filled in with concurrent reverse DNS lookups as hops are discovered, and routers that report the destination unreachable are labeled with the reason. A "Prefer IPv4" checkbox (checked by default) selects which address family to use when a host name resolves to both, falling back to the other family when the preferred one is unavailable. Double-clicking a hop jumps to the Ping tool and begins ping monitoring of that router.
 
 ### DNS Lookup
 
@@ -60,10 +64,12 @@ Open `WindowsNetTool.sln` in Visual Studio 2026, or run `dotnet build` / `msbuil
 
 ## Limitations
 
-* IPv4 only (for now).
+* IPv4 focused.  Minimal IPv6-compatible tools (for now).
 * Reads network configuration by parsing `netsh` output, which is only produced in English on English-language Windows installations. Non-English systems are not currently supported by some integrated tools.
 
 ## Future Plans
 
-* IPv6 support.
-* Integrate a simple asynchronous/concurrent traceroute tool (far, far faster than traditional traceroute tools).
+* IPv6 configuration support.
+* NDP Viewer (Neighbor Discovery Protocol; IPv6's equivalent to ARP)
+* Listening Ports - equivalent to Resource Monitor > Network > Listening Ports, but with added filter support.
+* Add a shortcut to Windows' Resource Monitor, directly opening its Network tab if possible.

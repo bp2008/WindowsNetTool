@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -116,6 +117,7 @@ namespace WindowsNetTool.Tools.IpScanner
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
+			this.numInFlight.Value = MainForm.settings.IpScanner_NumInFlight;
 			if (!DesignMode)
 				PopulateSubnetList();
 		}
@@ -318,7 +320,7 @@ namespace WindowsNetTool.Tools.IpScanner
 				// gets its own.
 				using (NetPing ping = new NetPing())
 				{
-					PingReply reply = await ping.SendPingAsync(address, ScanPingTimeoutMs);
+					PingReply reply = await ping.SendPingAsync(address, ScanPingTimeoutMs, PingUtil.PingPayload);
 					if (session == mySession && !IsDisposed && reply.Status == IPStatus.Success)
 						RecordPingReply(address, reply.RoundtripTime, mySession);
 				}
@@ -867,6 +869,15 @@ namespace WindowsNetTool.Tools.IpScanner
 				mask <<= 1;
 			}
 			return mask == 0 ? prefix : -1;
+		}
+
+		private void numInFlight_ValueChanged(object sender, EventArgs e)
+		{
+			if (MainForm.settings.IpScanner_NumInFlight != (int)numInFlight.Value)
+			{
+				MainForm.settings.IpScanner_NumInFlight = (int)numInFlight.Value;
+				MainForm.settings.Save();
+			}
 		}
 
 		private static uint ToUint(IPAddress address)

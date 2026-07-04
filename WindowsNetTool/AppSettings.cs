@@ -12,6 +12,8 @@ namespace WindowsNetTool
 	/// </summary>
 	public class AppSettings
 	{
+		private static object saveLock = new object();
+
 		// DataContractJsonSerializer creates instances without running constructors or field
 		// initializers, so every field's default must be its type's zero value (0/false/null).
 
@@ -26,6 +28,13 @@ namespace WindowsNetTool
 
 		/// <summary>Type name of the most recently selected tool (e.g. "PingTool").</summary>
 		public string SelectedTool;
+
+		/// <summary>
+		/// Number of in-flight requests to allow for the IpScanner tool.
+		/// </summary>
+		public int IpScanner_NumInFlight = 256;
+
+
 
 		/// <summary>
 		/// Returns the path of the program's data directory (%AppData%\WindowsNetTool),
@@ -75,7 +84,10 @@ namespace WindowsNetTool
 				{
 					using (XmlDictionaryWriter writer = JsonReaderWriterFactory.CreateJsonWriter(ms, Encoding.UTF8, false, true, "\t"))
 						new DataContractJsonSerializer(typeof(AppSettings)).WriteObject(writer, this);
-					File.WriteAllBytes(GetSettingsFilePath(), ms.ToArray());
+					lock (saveLock)
+					{
+						File.WriteAllBytes(GetSettingsFilePath(), ms.ToArray());
+					}
 				}
 			}
 			catch { }

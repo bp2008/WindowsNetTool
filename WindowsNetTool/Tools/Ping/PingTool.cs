@@ -148,7 +148,7 @@ namespace WindowsNetTool.Tools.Ping
 				string header = target.Equals(address.ToString()) ? target : target + " [" + address + "]";
 				if (txtLog.TextLength > 0)
 					AppendLog("");
-				AppendLog("Pinging " + header + " with 32 bytes of data:");
+				AppendLog("Pinging " + header + " with " + PingUtil.PayloadSize + " bytes of data:");
 
 				pingTimer.Interval = CurrentIntervalMs;
 				pingTimer.Start();
@@ -216,7 +216,7 @@ namespace WindowsNetTool.Tools.Ping
 				// gets its own.
 				using (NetPing ping = new NetPing())
 				{
-					PingReply reply = await ping.SendPingAsync(targetAddress, PingTimeoutMs);
+					PingReply reply = await ping.SendPingAsync(targetAddress, PingTimeoutMs, PingUtil.PingPayload);
 					if (mySession != session || IsDisposed)
 						return;
 					LogReply(timestamp, reply);
@@ -251,27 +251,11 @@ namespace WindowsNetTool.Tools.Ping
 			else if (reply.Status == IPStatus.TimedOut)
 				line = "Request timed out.";
 			else if (reply.Address != null && !reply.Address.Equals(IPAddress.Any) && !reply.Address.Equals(IPAddress.IPv6Any))
-				line = "Reply from " + reply.Address + ": " + DescribeStatus(reply.Status) + ".";
+				line = "Reply from " + reply.Address + ": " + PingUtil.DescribeStatus(reply.Status) + ".";
 			else
-				line = DescribeStatus(reply.Status) + ".";
+				line = PingUtil.DescribeStatus(reply.Status) + ".";
 			AppendLog("[" + timestamp + "] " + line);
 			UpdateStatsLabel();
-		}
-
-		private static string DescribeStatus(IPStatus status)
-		{
-			switch (status)
-			{
-				case IPStatus.DestinationHostUnreachable: return "Destination host unreachable";
-				case IPStatus.DestinationNetworkUnreachable: return "Destination net unreachable";
-				case IPStatus.DestinationPortUnreachable: return "Destination port unreachable";
-				case IPStatus.DestinationProtocolUnreachable: return "Destination protocol unreachable";
-				case IPStatus.TtlExpired: return "TTL expired in transit";
-				case IPStatus.ParameterProblem: return "Parameter problem";
-				case IPStatus.SourceQuench: return "Source quench received";
-				case IPStatus.BadDestination: return "Bad destination";
-				default: return status.ToString();
-			}
 		}
 
 		private void AppendStatisticsSummary()

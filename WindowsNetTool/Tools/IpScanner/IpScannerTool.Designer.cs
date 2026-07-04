@@ -104,6 +104,7 @@ namespace WindowsNetTool.Tools.IpScanner
             0,
             0,
             0});
+			this.numInFlight.ValueChanged += new System.EventHandler(this.numInFlight_ValueChanged);
 			// 
 			// btnStartStop
 			// 

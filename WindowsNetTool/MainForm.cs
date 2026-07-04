@@ -10,6 +10,7 @@ using WindowsNetTool.Tools.IpScanner;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
+using WindowsNetTool.Tools.Traceroute;
 using WindowsNetTool.Tools.WindowsTools;
 
 namespace WindowsNetTool
@@ -29,7 +30,10 @@ namespace WindowsNetTool
 		}
 
 		private UserControl activeTool;
-		private readonly AppSettings settings;
+		/// <summary>
+		/// Persistent application settings, loaded from disk on startup and saved on exit or when certain settings change.
+		/// </summary>
+		public static AppSettings settings { get; private set; }
 
 		// Browser-style tool selection history, navigated with the mouse's back/forward
 		// buttons (or a keyboard's Back/Forward media keys).  Selecting a tool by any other
@@ -45,7 +49,8 @@ namespace WindowsNetTool
 			InitializeComponent();
 			Text = "WindowsNetTool v" + Application.ProductVersion;
 
-			settings = AppSettings.Load();
+			if (settings == null)
+				settings = AppSettings.Load();
 			ApplyWindowPlacement();
 
 			// Load the window icon from the embedded multi-resolution .ico so the title bar
@@ -62,6 +67,7 @@ namespace WindowsNetTool
 			AddTool<NetworkCategoryTool>("Network Category");
 			AddTool<RoutesTool>("Static Routes");
 			AddTool<PingTool>("Ping");
+			AddTool<TracerouteTool>("Traceroute");
 			AddTool<DnsLookupTool>("DNS Lookup");
 			AddTool<ArpTool>("ARP Viewer");
 			AddTool<IpScannerTool>("IP Scanner");
