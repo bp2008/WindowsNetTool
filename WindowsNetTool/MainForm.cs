@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
 using WindowsNetTool.Tools.NetworkCategory;
+using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
 using WindowsNetTool.Tools.WindowsTools;
 
@@ -14,6 +15,7 @@ namespace WindowsNetTool
 		private class ToolEntry
 		{
 			public string Name;
+			public Type ToolType;
 			public Func<UserControl> Factory;
 			public UserControl Instance;
 			public override string ToString()
@@ -39,19 +41,40 @@ namespace WindowsNetTool
 
 			splitContainer.Panel2.ClientSizeChanged += Panel2_ClientSizeChanged;
 
-			AddTool("IP Configuration", () => new IpConfigTool());
-			AddTool("Network Category", () => new NetworkCategoryTool());
-			AddTool("Static Routes", () => new RoutesTool());
-			AddTool("Hosts File Editor", () => new HostsFileTool());
-			AddTool("Links / Shortcuts", () => new LinksTool());
+			AddTool<IpConfigTool>("IP Configuration");
+			AddTool<NetworkCategoryTool>("Network Category");
+			AddTool<RoutesTool>("Static Routes");
+			AddTool<PingTool>("Ping");
+			AddTool<HostsFileTool>("Hosts File Editor");
+			AddTool<LinksTool>("Links / Shortcuts");
 
 			if (listBoxTools.Items.Count > 0)
 				listBoxTools.SelectedIndex = 0;
 		}
 
-		private void AddTool(string name, Func<UserControl> factory)
+		private void AddTool<T>(string name) where T : UserControl, new()
 		{
-			listBoxTools.Items.Add(new ToolEntry { Name = name, Factory = factory });
+			listBoxTools.Items.Add(new ToolEntry { Name = name, ToolType = typeof(T), Factory = () => new T() });
+		}
+
+		/// <summary>
+		/// Selects the tool of the given type in the tool list (creating it upon first activation)
+		/// and returns its instance, or null if no such tool is registered.  This lets tools link
+		/// into each other, e.g. an address list could offer one-click ping monitoring via
+		/// ((MainForm)FindForm()).ActivateTool&lt;PingTool&gt;().StartPing(address);
+		/// </summary>
+		public T ActivateTool<T>() where T : UserControl
+		{
+			for (int i = 0; i < listBoxTools.Items.Count; i++)
+			{
+				ToolEntry entry = (ToolEntry)listBoxTools.Items[i];
+				if (entry.ToolType == typeof(T))
+				{
+					listBoxTools.SelectedIndex = i;
+					return entry.Instance as T;
+				}
+			}
+			return null;
 		}
 
 		protected override void OnFormClosing(FormClosingEventArgs e)
