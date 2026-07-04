@@ -1,6 +1,6 @@
 namespace WindowsNetTool.Tools.WindowsTools
 {
-	partial class WindowsToolsTool
+	partial class LinksTool
 	{
 		/// <summary>
 		/// Required designer variable.

@@ -8,17 +8,24 @@
 		<RootNamespace>WindowsNetTool</RootNamespace>
 		<AssemblyName>WindowsNetTool</AssemblyName>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-		<Version>1.1.0</Version>
+		<ApplicationIcon>app.ico</ApplicationIcon>
+		<Version>1.2.0</Version>
 		<Product>WindowsNetTool</Product>
 		<Description>A collection of Windows networking utilities.</Description>
 		<Copyright>Copyright © 2026</Copyright>
-		<AssemblyVersion>1.1.0</AssemblyVersion>
-		<FileVersion>1.1.0</FileVersion>
+		<AssemblyVersion>1.2.0</AssemblyVersion>
+		<FileVersion>1.2.0</FileVersion>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<!-- Required for `dynamic` COM interop with Shell.Application (opening native connection dialogs). -->
 		<Reference Include="Microsoft.CSharp" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Embedded so MainForm can load the multi-resolution icon for the title bar. -->
+		<EmbeddedResource Include="app.ico" />
 	</ItemGroup>
 
 </Project>

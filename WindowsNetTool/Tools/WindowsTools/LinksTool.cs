@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace WindowsNetTool.Tools.WindowsTools
@@ -6,9 +7,9 @@ namespace WindowsNetTool.Tools.WindowsTools
 	/// <summary>
 	/// A launcher panel for Windows' built-in networking-related settings and control panel pages.
 	/// </summary>
-	public partial class WindowsToolsTool : UserControl
+	public partial class LinksTool : UserControl
 	{
-		public WindowsToolsTool()
+		public LinksTool()
 		{
 			InitializeComponent();
 
@@ -26,10 +27,17 @@ namespace WindowsNetTool.Tools.WindowsTools
 			AddLauncher("VPN", () => NetworkPanels.OpenSettingsUri("ms-settings:network-vpn"));
 			AddLauncher("Proxy", () => NetworkPanels.OpenSettingsUri("ms-settings:network-proxy"));
 			AddLauncher("Advanced Network Settings", () => NetworkPanels.OpenSettingsUri("ms-settings:network-advancedsettings"));
+
+			AddHeading("Web Resources");
+			AddLauncher("WindowsNetTool", () => Process.Start("https://github.com/bp2008/WindowsNetTool"));
+			AddLauncher("PingTracer", () => Process.Start("https://github.com/bp2008/PingTracer"));
 		}
 
+		private Button previousButton = null;
 		private void AddHeading(string text)
 		{
+			if (previousButton != null)
+				flowPanel.SetFlowBreak(previousButton, true);
 			Label label = new Label();
 			label.Text = text;
 			label.Font = new System.Drawing.Font(Font, System.Drawing.FontStyle.Bold);
@@ -41,7 +49,7 @@ namespace WindowsNetTool.Tools.WindowsTools
 
 		private void AddLauncher(string text, Action open)
 		{
-			Button button = new Button();
+			Button button = previousButton = new Button();
 			button.Text = text;
 			button.Size = new System.Drawing.Size(260, 30);
 			button.Margin = new Padding(6, 3, 6, 3);

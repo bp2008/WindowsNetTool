@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
@@ -21,16 +22,28 @@ namespace WindowsNetTool
 			}
 		}
 
+		private UserControl activeTool;
+
 		public MainForm()
 		{
 			InitializeComponent();
 			Text = "WindowsNetTool v" + Application.ProductVersion;
 
+			// Load the window icon from the embedded multi-resolution .ico so the title bar
+			// and taskbar each get a native-size image.
+			using (System.IO.Stream iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("WindowsNetTool.app.ico"))
+			{
+				if (iconStream != null)
+					Icon = new Icon(iconStream);
+			}
+
+			splitContainer.Panel2.ClientSizeChanged += Panel2_ClientSizeChanged;
+
 			AddTool("IP Configuration", () => new IpConfigTool());
 			AddTool("Network Category", () => new NetworkCategoryTool());
 			AddTool("Static Routes", () => new RoutesTool());
 			AddTool("Hosts File Editor", () => new HostsFileTool());
-			AddTool("Windows Tools", () => new WindowsToolsTool());
+			AddTool("Links / Shortcuts", () => new LinksTool());
 
 			if (listBoxTools.Items.Count > 0)
 				listBoxTools.SelectedIndex = 0;
@@ -70,17 +83,40 @@ namespace WindowsNetTool
 			if (entry.Instance == null)
 			{
 				entry.Instance = entry.Factory();
-				entry.Instance.Dock = DockStyle.Fill;
 				splitContainer.Panel2.Controls.Add(entry.Instance);
 				created = true;
 			}
+			activeTool = entry.Instance;
 			foreach (Control c in splitContainer.Panel2.Controls)
 				c.Visible = c == entry.Instance;
+			splitContainer.Panel2.AutoScrollPosition = Point.Empty;
+			LayoutActiveTool();
 			entry.Instance.BringToFront();
 			// Tools load their data when first created; on later activations, tell them to reload
 			// so they are not showing stale state (e.g. old interface names after a rename).
 			if (!created && entry.Instance is IRefreshOnActivate refreshable)
 				refreshable.RefreshOnActivate();
+		}
+
+		private void Panel2_ClientSizeChanged(object sender, EventArgs e)
+		{
+			LayoutActiveTool();
+		}
+
+		// Docked controls do not trigger Panel2's AutoScroll, so the active tool is laid out
+		// manually: it fills the panel's client area but never shrinks below its MinimumSize,
+		// which lets AutoScroll show scroll bars when the panel is too small.
+		private void LayoutActiveTool()
+		{
+			if (activeTool == null)
+				return;
+			SplitterPanel panel = splitContainer.Panel2;
+			Size size = new Size(
+				Math.Max(panel.ClientSize.Width, activeTool.MinimumSize.Width),
+				Math.Max(panel.ClientSize.Height, activeTool.MinimumSize.Height));
+			// AutoScrollPosition is negative while scrolled; using it as the location keeps the
+			// tool aligned with the panel's scrolled origin instead of snapping back to (0,0).
+			activeTool.Bounds = new Rectangle(panel.AutoScrollPosition, size);
 		}
 	}
 }
