@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Arp;
 using WindowsNetTool.Tools.DnsLookup;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
@@ -51,6 +52,7 @@ namespace WindowsNetTool
 			AddTool<RoutesTool>("Static Routes");
 			AddTool<PingTool>("Ping");
 			AddTool<DnsLookupTool>("DNS Lookup");
+			AddTool<ArpTool>("ARP Viewer");
 			AddTool<HostsFileTool>("Hosts File Editor");
 			AddTool<LinksTool>("Links / Shortcuts");
 

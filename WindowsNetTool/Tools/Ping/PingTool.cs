@@ -59,8 +59,8 @@ namespace WindowsNetTool.Tools.Ping
 
 		/// <summary>
 		/// Sets the ping target and begins pinging it, stopping any ping already in progress.
-		/// This is the entry point for other tools (e.g. a future ARP viewer or IP scanner) to
-		/// begin ping monitoring of an address:
+		/// This is the entry point for other tools (e.g. the ARP viewer or a future IP scanner)
+		/// to begin ping monitoring of an address:
 		/// ((MainForm)FindForm()).ActivateTool&lt;PingTool&gt;().StartPing(address);
 		/// </summary>
 		public void StartPing(string hostOrAddress)
