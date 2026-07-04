@@ -1,6 +1,6 @@
 # WindowsNetTool
 
-A small, light-weight GUI application for Windows offering easy access to advanced network configuration capabilities.  Many of the capabilities offered here are difficult to find and some of them would otherwise require the use of command-line tools.
+WindowsNetTool is a Swiss Army knife of Windows network configuration and diagnostic tools.  Many of the capabilities offered here are difficult to find natively in the OS and some of them would otherwise require the use of command-line tools.
 
 Windows' built-in IP address management interfaces are decades old, a little buggy, and do not properly support DHCP and static IP coexistence. WindowsNetTool is intended as a third-party alternative that solves those issues, and as a home for additional small networking utilities over time.
 
