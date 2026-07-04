@@ -21,6 +21,8 @@
 	<ItemGroup>
 		<!-- Required for `dynamic` COM interop with Shell.Application (opening native connection dialogs). -->
 		<Reference Include="Microsoft.CSharp" />
+		<!-- Framework assembly (not a NuGet package) providing DataContractJsonSerializer for AppSettings. -->
+		<Reference Include="System.Runtime.Serialization" />
 	</ItemGroup>
 
 	<ItemGroup>

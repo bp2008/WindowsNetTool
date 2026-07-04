@@ -26,11 +26,15 @@ namespace WindowsNetTool
 		}
 
 		private UserControl activeTool;
+		private readonly AppSettings settings;
 
 		public MainForm()
 		{
 			InitializeComponent();
 			Text = "WindowsNetTool v" + Application.ProductVersion;
+
+			settings = AppSettings.Load();
+			ApplyWindowPlacement();
 
 			// Load the window icon from the embedded multi-resolution .ico so the title bar
 			// and taskbar each get a native-size image.
@@ -51,7 +55,62 @@ namespace WindowsNetTool
 			AddTool<LinksTool>("Links / Shortcuts");
 
 			if (listBoxTools.Items.Count > 0)
-				listBoxTools.SelectedIndex = 0;
+				listBoxTools.SelectedIndex = GetSavedToolIndex();
+		}
+
+		private int GetSavedToolIndex()
+		{
+			for (int i = 0; i < listBoxTools.Items.Count; i++)
+				if (((ToolEntry)listBoxTools.Items[i]).ToolType.Name == settings.SelectedTool)
+					return i;
+			return 0;
+		}
+
+		/// <summary>
+		/// Positions the window from saved settings, or centered on the display the mouse cursor
+		/// is on when no placement has been saved yet (first launch).  The window is shrunk to
+		/// fit the target screen's working area if needed (its MinimumSize permitting) and nudged
+		/// the minimum amount required to be fully on-screen.  When the screen is too small to
+		/// fit the window even at its minimum size, the top left corner (title bar) is kept
+		/// on-screen so the window can still be moved and resized.
+		/// </summary>
+		private void ApplyWindowPlacement()
+		{
+			StartPosition = FormStartPosition.Manual;
+
+			Rectangle wa;
+			int x, y, width, height;
+			if (settings.WindowWidth > 0 && settings.WindowHeight > 0)
+			{
+				Rectangle saved = new Rectangle(settings.WindowX, settings.WindowY, settings.WindowWidth, settings.WindowHeight);
+				// The monitor layout may have changed since last run.  FromRectangle picks the
+				// screen showing the largest part of the saved bounds, or the nearest screen if
+				// the saved bounds are entirely off-screen.
+				wa = Screen.FromRectangle(saved).WorkingArea;
+				x = saved.X;
+				y = saved.Y;
+				width = saved.Width;
+				height = saved.Height;
+			}
+			else
+			{
+				wa = Screen.FromPoint(Cursor.Position).WorkingArea;
+				width = Width;
+				height = Height;
+				x = wa.X + (wa.Width - width) / 2;
+				y = wa.Y + (wa.Height - height) / 2;
+			}
+
+			width = Math.Max(Math.Min(width, wa.Width), MinimumSize.Width);
+			height = Math.Max(Math.Min(height, wa.Height), MinimumSize.Height);
+			// The left/top clamps are applied last so that when the window cannot fit, it is the
+			// right/bottom edges that hang off-screen.
+			x = Math.Max(Math.Min(x, wa.Right - width), wa.X);
+			y = Math.Max(Math.Min(y, wa.Bottom - height), wa.Y);
+			Bounds = new Rectangle(x, y, width, height);
+
+			if (settings.WindowMaximized)
+				WindowState = FormWindowState.Maximized;
 		}
 
 		private void AddTool<T>(string name) where T : UserControl, new()
@@ -97,6 +156,22 @@ namespace WindowsNetTool
 				}
 			}
 			base.OnFormClosing(e);
+		}
+
+		protected override void OnFormClosed(FormClosedEventArgs e)
+		{
+			// When closing maximized or minimized, Bounds describes that transient state, so the
+			// normal-state bounds are taken from RestoreBounds instead.
+			Rectangle bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+			settings.WindowX = bounds.X;
+			settings.WindowY = bounds.Y;
+			settings.WindowWidth = bounds.Width;
+			settings.WindowHeight = bounds.Height;
+			settings.WindowMaximized = WindowState == FormWindowState.Maximized;
+			ToolEntry selected = listBoxTools.SelectedItem as ToolEntry;
+			settings.SelectedTool = selected == null ? null : selected.ToolType.Name;
+			settings.Save();
+			base.OnFormClosed(e);
 		}
 
 		private void listBoxTools_SelectedIndexChanged(object sender, EventArgs e)
