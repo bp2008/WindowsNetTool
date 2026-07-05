@@ -52,7 +52,7 @@ namespace WindowsNetTool.Tools.LinksShortcuts
 		{
 			Button button = previousButton = new Button();
 			button.Text = text;
-			button.Size = new System.Drawing.Size(260, 30);
+			button.Size = new System.Drawing.Size(260, 44);
 			button.Margin = new Padding(6, 3, 6, 3);
 			button.UseVisualStyleBackColor = true;
 			button.Click += (sender, e) =>

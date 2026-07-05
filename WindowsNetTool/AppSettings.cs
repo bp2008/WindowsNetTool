@@ -30,9 +30,9 @@ namespace WindowsNetTool
 		public string SelectedTool;
 
 		/// <summary>
-		/// Number of in-flight requests to allow for the IpScanner tool.
+		/// Maximum number of in-flight ping requests to allow for the IpScanner tool.
 		/// </summary>
-		public int IpScanner_NumInFlight = 256;
+		public int IpScanner_MaxPingsInFlight = 512;
 
 
 

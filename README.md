@@ -32,7 +32,7 @@ Manages persistent IPv4 static routes (routes that survive reboots, via `netsh` 
 
 ### Ping
 
-A continuous ping monitor with output styled after Windows' `ping` command. Enter a host name or IP address and press Start; each reply or timeout is appended to an auto-scrolling log with a timestamp, and running totals (sent / received / lost, min / avg / max round-trip time) are shown below the log. A slider adjusts the ping rate from 1 ping per 10 seconds up to 10 pings per second (default: 1 per second), and can be moved while pinging. Pings are sent concurrently, so a slow or unresponsive host does not reduce the configured ping rate. A Windows-style statistics summary is printed whenever pinging stops, and pinging stops automatically when you switch to a different tool. Other tools can link into the Ping tool; the ARP Viewer, IP Scanner, and Traceroute tools use this to begin ping monitoring of a selected address with one click.
+A continuous ping monitor with output styled after Windows' `ping` command. Enter a host name or IP address and press Start; each reply or timeout is appended to an auto-scrolling log with a timestamp, and running totals (sent / received / lost, min / avg / max round-trip time) are shown below the log. A slider adjusts the ping rate from 1 ping per 10 seconds up to 10 pings per second (default: 1 per second), and can be moved while pinging. Pings are sent concurrently, so a slow or unresponsive host does not reduce the configured ping rate. A Windows-style statistics summary is printed whenever pinging stops, and pinging stops automatically when you switch to a different tool. Other tools can link into the Ping tool; the ARP Viewer, NDP Viewer, IP Scanner, Device List, and Traceroute tools use this to begin ping monitoring of a selected address with one click.
 
 ### Traceroute
 
@@ -46,17 +46,25 @@ Looks up DNS records for a domain name and performs reverse (PTR) lookups when a
 
 Displays the system's ARP table (ARP = address resolution protocol; a way of discovering which MAC addresses own which IP addresses within your LAN). Each entry shows the IP address, MAC address, owning interface, and entry state (Reachable, Stale, Permanent, etc. — more informative than the static/dynamic distinction shown by `arp -a`). Entries can be filtered live by IP address and by MAC address; filters match any part of the address, and the MAC filter accepts `-`, `:`, `.`, or no separators interchangeably. Columns sort with standard header behavior: click to sort ascending (IP addresses sort numerically), click again to reverse, and Shift+click to sort by additional columns. Double-clicking an entry (or pressing the Ping Selected button) jumps to the Ping tool and begins ping monitoring of that address. The table is read through the IP Helper API (`GetIpNetTable2`) rather than by parsing `arp -a` output, so this tool works regardless of the system's display language.
 
+### NDP Viewer
+
+The IPv6 counterpart of the ARP Viewer: displays the system's NDP table (NDP = Neighbor Discovery Protocol; IPv6's equivalent to ARP). Each entry shows the IPv6 address, MAC address, owning interface, entry state, and whether the neighbor has announced itself as a router. Entries filter and sort exactly like the ARP Viewer's (live IP and separator-insensitive MAC filters; click, click-again, and Shift+click column sorting). Double-clicking an entry (or pressing the Ping Selected button) jumps to the Ping tool and begins ping monitoring of that address — link-local addresses are passed with their required zone index (e.g. `fe80::1%5`) so pinging them just works. Like the ARP Viewer, the table is read through the IP Helper API (`GetIpNetTable2`) rather than by parsing command-line output, so this tool works regardless of the system's display language.
+
 ### IP Scanner
 
 Discovers the hosts on a subnet. Every address in the subnet is pinged asynchronously with a tunable limit on the number of pings in flight (default 256), and scanning repeats in continuous waves until stopped, so hosts that miss one wave are caught by a later one. The system ARP table is merged into the results each wave, which fills in MAC addresses and also surfaces hosts that don't answer pings (shown with a ping time of "N/A"). Each discovered host is resolved to a name with reverse DNS — but private addresses are only ever looked up on a local DNS server, never sent to a public resolver. Results show the IP address, latest ping round-trip time, host name, MAC address, and the time of the last reply, updated in place without flicker; columns sort with the same header behavior as the ARP Viewer (click to sort, click again to reverse, Shift+click for multi-column). The subnet dropdown is pre-filled with the subnets of the machine's network interfaces, and any subnet down to /16 in size can be typed in CIDR notation. Double-clicking a host jumps to the Ping tool.
+
+### Device List
+
+Builds an inventory of the machines on a network by combining the discovery methods of the IP Scanner, ARP Viewer, and NDP Viewer. Every IPv4 address in the selected subnet is pinged in repeating waves, the system's ARP (IPv4) and NDP (IPv6) neighbor tables are merged into the results each wave, and everything is correlated by MAC address so each physical device gets exactly one row listing all of its known IPv4 addresses, IPv6 addresses, and reverse-DNS host names, along with its MAC address, latest ping round-trip time, and the time of its last reply. Discovered IPv6 addresses are pinged each wave too, keeping IPv6 reachability current. The local machine's own adapter is included and labeled "This PC", the default gateway is labeled "Gateway", and devices that advertise themselves as IPv6 routers are labeled "Router". To scale down to small windows, the list shows one compact row per device (extra addresses are summarized as e.g. "192.168.0.10 (+2)") and a detail pane below shows everything known about the selected device as selectable, copyable text. A single filter box live-matches against host names, every address, the labels, and the MAC address (ignoring separators), and columns sort with the same header behavior as the other list tools. Reverse DNS follows the IP Scanner's privacy rule: private addresses are only ever looked up on a local DNS server, never sent to a public resolver. Double-clicking a device jumps to the Ping tool.
 
 ### Hosts File Editor
 
 A notepad-like embedded editor for the system hosts file (`C:\Windows\System32\drivers\etc\hosts`). Edits, saves, and reloads the file with unsaved-change warnings, offers to clear the file's read-only attribute when it blocks saving, preserves the file's original text encoding, and includes a one-click DNS cache flush (`ipconfig /flushdns`) so old entries don't linger after editing.
 
-### Windows Tools
+### Links / Shortcuts
 
-One-click launchers for Windows' built-in networking panels: Network Connections (ncpa.cpl), Network and Sharing Center, Internet Options, Windows Defender Firewall (basic and Advanced Security), and the Settings app pages for Network Status, Ethernet, Wi-Fi, VPN, Proxy, and Advanced Network Settings.
+One-click launchers for many of Windows' built-in networking panels, and links to this repository and the [PingTracer](https://github.com/bp2008/PingTracer) repository.
 
 ## Building
 
@@ -64,12 +72,10 @@ Open `WindowsNetTool.sln` in Visual Studio 2026, or run `dotnet build` / `msbuil
 
 ## Limitations
 
-* IPv4 focused.  Minimal IPv6-compatible tools (for now).
+* IPv4 focused.  IPv6 is covered by the diagnostic tools (NDP Viewer, Device List, Ping, Traceroute, DNS Lookup) but not yet by the configuration tools.
 * Reads network configuration by parsing `netsh` output, which is only produced in English on English-language Windows installations. Non-English systems are not currently supported by some integrated tools.
 
 ## Future Plans
 
 * IPv6 configuration support.
-* NDP Viewer (Neighbor Discovery Protocol; IPv6's equivalent to ARP)
 * Listening Ports - equivalent to Resource Monitor > Network > Listening Ports, but with added filter support.
-* Add a shortcut to Windows' Resource Monitor, directly opening its Network tab if possible.

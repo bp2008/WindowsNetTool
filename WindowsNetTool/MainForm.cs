@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
+using WindowsNetTool.Tools.DeviceList;
 using WindowsNetTool.Tools.DnsLookup;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
 using WindowsNetTool.Tools.IpScanner;
+using WindowsNetTool.Tools.Ndp;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
@@ -55,7 +57,7 @@ namespace WindowsNetTool
 
 			// Load the window icon from the embedded multi-resolution .ico so the title bar
 			// and taskbar each get a native-size image.
-			using (System.IO.Stream iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("WindowsNetTool.app.ico"))
+			using (System.IO.Stream iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("WindowsNetTool.app-min.ico"))
 			{
 				if (iconStream != null)
 					Icon = new Icon(iconStream);
@@ -70,7 +72,9 @@ namespace WindowsNetTool
 			AddTool<TracerouteTool>("Traceroute");
 			AddTool<DnsLookupTool>("DNS Lookup");
 			AddTool<ArpTool>("ARP Viewer");
+			AddTool<NdpTool>("NDP Viewer");
 			AddTool<IpScannerTool>("IP Scanner");
+			AddTool<DeviceListTool>("Device List");
 			AddTool<HostsFileTool>("Hosts File Editor");
 			AddTool<LinksTool>("Links / Shortcuts");
 

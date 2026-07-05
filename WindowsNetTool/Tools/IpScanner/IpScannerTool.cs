@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -9,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
-using WindowsNetTool.Tools.DnsLookup;
 using WindowsNetTool.Tools.Ping;
 // The System.Net.NetworkInformation.Ping type must be aliased because the simple name "Ping"
 // binds to the WindowsNetTool.Tools.Ping namespace.
@@ -101,10 +99,8 @@ namespace WindowsNetTool.Tools.IpScanner
 		private readonly List<SortKey> sortKeys = new List<SortKey>();
 		/// <summary>Limits how many reverse DNS lookups run concurrently.</summary>
 		private readonly SemaphoreSlim dnsGate = new SemaphoreSlim(MaxDnsConcurrency);
-		/// <summary>A system DNS server suitable for reverse-resolving private addresses (private or on-link), or null.</summary>
-		private IPAddress dnsLocal;
-		/// <summary>Any system DNS server, used for reverse-resolving public addresses, or null.</summary>
-		private IPAddress dnsAny;
+		/// <summary>The DNS servers used for reverse lookups, chosen when a scan starts.</summary>
+		private ReverseDns reverseDns = new ReverseDns();
 		/// <summary>Appended to the status line when reverse DNS had to be disabled for this scan.</summary>
 		private string dnsNote = "";
 		private int waveNumber, waveTotal, waveCompleted;
@@ -117,7 +113,7 @@ namespace WindowsNetTool.Tools.IpScanner
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
-			this.numInFlight.Value = MainForm.settings.IpScanner_NumInFlight;
+			this.numInFlight.Value = MainForm.settings.IpScanner_MaxPingsInFlight;
 			if (!DesignMode)
 				PopulateSubnetList();
 		}
@@ -163,11 +159,11 @@ namespace WindowsNetTool.Tools.IpScanner
 					{
 						if (ua.Address.AddressFamily != AddressFamily.InterNetwork || ua.IPv4Mask == null)
 							continue;
-						int prefix = PrefixFromMask(ToUint(ua.IPv4Mask));
+						int prefix = Ipv4Util.PrefixFromMask(Ipv4Util.ToUint(ua.IPv4Mask));
 						// /31 and /32 (point-to-point and VPN addresses) are pointless to scan.
 						if (prefix < 8 || prefix > 30)
 							continue;
-						string cidr = FromUint(ToUint(ua.Address) & MaskOf(prefix)).ToString() + "/" + prefix;
+						string cidr = Ipv4Util.FromUint(Ipv4Util.ToUint(ua.Address) & Ipv4Util.MaskOf(prefix)).ToString() + "/" + prefix;
 						if (!seen.Add(cidr + "|" + nic.Name))
 							continue;
 						(hasGateway ? withGateway : withoutGateway).Add(new SubnetChoice { Cidr = cidr, InterfaceName = nic.Name });
@@ -226,7 +222,7 @@ namespace WindowsNetTool.Tools.IpScanner
 			uint network;
 			int prefix;
 			string error;
-			if (!TryParseCidr(text, out network, out prefix, out error))
+			if (!Ipv4Util.TryParseCidr(text, out network, out prefix, out error))
 			{
 				MessageBox.Show(this, error, "IP Scanner", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
@@ -248,15 +244,15 @@ namespace WindowsNetTool.Tools.IpScanner
 			pendingNew.Clear();
 			dirtyResults.Clear();
 			listResults.Items.Clear();
-			ChooseDnsServers();
-			dnsNote = dnsLocal == null && IsPrivateIPv4(network) ? "   (reverse DNS unavailable: no local DNS server)" : "";
+			reverseDns = ReverseDns.ChooseServers();
+			dnsNote = reverseDns.Local == null && Ipv4Util.IsPrivateIPv4(network) ? "   (reverse DNS unavailable: no local DNS server)" : "";
 			waveNumber = 0;
 			waveCompleted = 0;
 			btnStartStop.Text = "Stop";
 			comboSubnet.Enabled = false;
 			timerFlush.Start();
 
-			List<IPAddress> addresses = EnumerateAddresses(network, prefix);
+			List<IPAddress> addresses = Ipv4Util.EnumerateAddresses(network, prefix);
 			waveTotal = addresses.Count;
 			while (session == mySession && !IsDisposed)
 			{
@@ -340,7 +336,7 @@ namespace WindowsNetTool.Tools.IpScanner
 
 		private void RecordPingReply(IPAddress address, long rtt, int mySession)
 		{
-			ScanResult result = GetOrCreateResult(ToUint(address), address, mySession);
+			ScanResult result = GetOrCreateResult(Ipv4Util.ToUint(address), address, mySession);
 			result.PingRtt = rtt;
 			result.LastReply = DateTime.Now;
 			MarkDirty(result);
@@ -364,7 +360,7 @@ namespace WindowsNetTool.Tools.IpScanner
 			}
 			if (session != mySession || IsDisposed)
 				return;
-			uint mask = MaskOf(scanPrefix);
+			uint mask = Ipv4Util.MaskOf(scanPrefix);
 			uint broadcast = scanNetwork | ~mask;
 			foreach (ArpEntry entry in entries)
 			{
@@ -403,7 +399,7 @@ namespace WindowsNetTool.Tools.IpScanner
 		private async void BeginHostnameLookup(ScanResult result, int mySession)
 		{
 			result.DnsAttempted = true;
-			IPAddress server = IsPrivateIPv4(result.IpSortKey) ? dnsLocal : (dnsAny ?? dnsLocal);
+			IPAddress server = reverseDns.ServerFor(result.IpAddress);
 			if (server == null)
 				return;
 			await dnsGate.WaitAsync();
@@ -412,7 +408,7 @@ namespace WindowsNetTool.Tools.IpScanner
 				if (session != mySession || IsDisposed)
 					return;
 				IPAddress target = result.IpAddress;
-				string host = await Task.Run(() => TryReverseLookup(server, target));
+				string host = await Task.Run(() => ReverseDns.TryReverseLookup(server, target, DnsTimeoutMs));
 				if (session != mySession || IsDisposed)
 					return;
 				if (host == null)
@@ -431,109 +427,6 @@ namespace WindowsNetTool.Tools.IpScanner
 			{
 				dnsGate.Release();
 			}
-		}
-
-		/// <summary>
-		/// Returns the host name, "" when the address definitively has no name (so the lookup is
-		/// not repeated), or null when the query timed out (so a later wave retries it).
-		/// </summary>
-		private static string TryReverseLookup(IPAddress server, IPAddress target)
-		{
-			try
-			{
-				DnsResponse response = DnsClient.Query(server, DnsClient.ReverseName(target), DnsRecordType.PTR, DnsTimeoutMs);
-				foreach (DnsRecord record in response.Answers)
-					if (record.Type == (ushort)DnsRecordType.PTR)
-						return record.Data;
-				return "";
-			}
-			catch (TimeoutException)
-			{
-				return null;
-			}
-			catch (IOException)
-			{
-				return null;
-			}
-			catch
-			{
-				return ""; // Malformed response, refused, etc.: do not retry every wave.
-			}
-		}
-
-		/// <summary>
-		/// Picks the DNS servers used for reverse lookups from the system's configured servers:
-		/// dnsLocal is one that is a private or directly-attached (on-link) address, dnsAny is
-		/// simply the first IPv4 server.  Either may be null.
-		/// </summary>
-		private void ChooseDnsServers()
-		{
-			dnsLocal = null;
-			dnsAny = null;
-			List<uint> onLinkNetworks = new List<uint>();
-			List<uint> onLinkMasks = new List<uint>();
-			try
-			{
-				NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
-				foreach (NetworkInterface nic in nics)
-				{
-					if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-						continue;
-					foreach (UnicastIPAddressInformation ua in nic.GetIPProperties().UnicastAddresses)
-					{
-						if (ua.Address.AddressFamily != AddressFamily.InterNetwork || ua.IPv4Mask == null)
-							continue;
-						int prefix = PrefixFromMask(ToUint(ua.IPv4Mask));
-						if (prefix <= 0)
-							continue;
-						onLinkNetworks.Add(ToUint(ua.Address) & MaskOf(prefix));
-						onLinkMasks.Add(MaskOf(prefix));
-					}
-				}
-				foreach (NetworkInterface nic in nics)
-				{
-					if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-						continue;
-					foreach (IPAddress dns in nic.GetIPProperties().DnsAddresses)
-					{
-						if (dns.AddressFamily != AddressFamily.InterNetwork)
-							continue;
-						uint address = ToUint(dns);
-						if (dnsAny == null)
-							dnsAny = dns;
-						if (dnsLocal == null && (IsPrivateIPv4(address) || IsOnLink(address, onLinkNetworks, onLinkMasks)))
-							dnsLocal = dns;
-					}
-				}
-			}
-			catch (NetworkInformationException)
-			{
-				// No DNS servers found; host name lookups are skipped for this scan.
-			}
-		}
-
-		private static bool IsOnLink(uint address, List<uint> networks, List<uint> masks)
-		{
-			for (int i = 0; i < networks.Count; i++)
-				if ((address & masks[i]) == networks[i])
-					return true;
-			return false;
-		}
-
-		/// <summary>
-		/// True for addresses that public DNS servers cannot meaningfully reverse-resolve:
-		/// RFC 1918 private ranges, loopback, link-local, and carrier-grade NAT (100.64/10).
-		/// </summary>
-		private static bool IsPrivateIPv4(uint address)
-		{
-			byte a = (byte)(address >> 24);
-			byte b = (byte)(address >> 16);
-			return a == 10
-				|| (a == 172 && b >= 16 && b <= 31)
-				|| (a == 192 && b == 168)
-				|| (a == 169 && b == 254)
-				|| (a == 100 && b >= 64 && b <= 127)
-				|| a == 127;
 		}
 
 		#region List updating
@@ -804,93 +697,13 @@ namespace WindowsNetTool.Tools.IpScanner
 
 		#endregion
 
-		#region Address arithmetic
-
-		private static bool TryParseCidr(string text, out uint network, out int prefix, out string error)
-		{
-			network = 0;
-			prefix = 0;
-			int slash = text.IndexOf('/');
-			if (slash < 0)
-			{
-				error = "Enter a subnet in CIDR notation, e.g. 192.168.1.0/24.";
-				return false;
-			}
-			IPAddress ip;
-			if (!IPAddress.TryParse(text.Substring(0, slash), out ip) || ip.AddressFamily != AddressFamily.InterNetwork)
-			{
-				error = "\"" + text.Substring(0, slash) + "\" is not a valid IPv4 address.";
-				return false;
-			}
-			if (!int.TryParse(text.Substring(slash + 1), out prefix) || prefix < 0 || prefix > 32)
-			{
-				error = "The prefix length after the \"/\" must be a number from 0 to 32.";
-				return false;
-			}
-			network = ToUint(ip) & MaskOf(prefix);
-			error = null;
-			return true;
-		}
-
-		/// <summary>
-		/// Lists every host address in the subnet.  The network and broadcast addresses are
-		/// excluded for ordinary subnets; /31 and /32 use all their addresses.
-		/// </summary>
-		private static List<IPAddress> EnumerateAddresses(uint network, int prefix)
-		{
-			uint broadcast = network | ~MaskOf(prefix);
-			List<IPAddress> list = new List<IPAddress>();
-			if (prefix == 32)
-				list.Add(FromUint(network));
-			else if (prefix == 31)
-			{
-				list.Add(FromUint(network));
-				list.Add(FromUint(broadcast));
-			}
-			else
-				for (uint value = network + 1; value < broadcast; value++)
-					list.Add(FromUint(value));
-			return list;
-		}
-
-		private static uint MaskOf(int prefix)
-		{
-			// The C# shift operator masks its count to 0-31, so a shift by 32 must be special-cased.
-			return prefix == 0 ? 0u : uint.MaxValue << (32 - prefix);
-		}
-
-		/// <summary>Returns the prefix length of a subnet mask, or -1 if the mask is not contiguous.</summary>
-		private static int PrefixFromMask(uint mask)
-		{
-			int prefix = 0;
-			while ((mask & 0x80000000u) != 0)
-			{
-				prefix++;
-				mask <<= 1;
-			}
-			return mask == 0 ? prefix : -1;
-		}
-
 		private void numInFlight_ValueChanged(object sender, EventArgs e)
 		{
-			if (MainForm.settings.IpScanner_NumInFlight != (int)numInFlight.Value)
+			if (MainForm.settings.IpScanner_MaxPingsInFlight != (int)numInFlight.Value)
 			{
-				MainForm.settings.IpScanner_NumInFlight = (int)numInFlight.Value;
+				MainForm.settings.IpScanner_MaxPingsInFlight = (int)numInFlight.Value;
 				MainForm.settings.Save();
 			}
 		}
-
-		private static uint ToUint(IPAddress address)
-		{
-			byte[] bytes = address.GetAddressBytes();
-			return (uint)(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3]);
-		}
-
-		private static IPAddress FromUint(uint value)
-		{
-			return new IPAddress(new byte[] { (byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value });
-		}
-
-		#endregion
 	}
 }

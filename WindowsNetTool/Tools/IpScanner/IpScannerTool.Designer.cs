@@ -180,12 +180,13 @@ namespace WindowsNetTool.Tools.IpScanner
 			// 
 			// lblStatus
 			// 
-			this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.lblStatus.AutoSize = true;
+			this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.lblStatus.AutoEllipsis = true;
 			this.lblStatus.Location = new System.Drawing.Point(157, 531);
 			this.lblStatus.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.lblStatus.Name = "lblStatus";
-			this.lblStatus.Size = new System.Drawing.Size(0, 16);
+			this.lblStatus.Size = new System.Drawing.Size(501, 16);
 			this.lblStatus.TabIndex = 7;
 			// 
 			// lblHint
