@@ -1,8 +1,8 @@
 # WindowsNetTool
 
-WindowsNetTool is a Swiss Army knife of Windows network configuration and diagnostic tools.  Many of the capabilities offered here are difficult to find natively in the OS and some of them would otherwise require the use of command-line tools.
+WindowsNetTool is a collection of network configuration and diagnostic tools for Windows.  Many of the capabilities offered here are difficult to find natively in the OS and some of them would otherwise require the use of command-line tools.
 
-Windows' built-in IP address management interfaces are decades old, a little buggy, and do not properly support DHCP and static IP coexistence. WindowsNetTool is intended as a third-party alternative that solves those issues, and as a home for additional small networking utilities over time.
+Many of Windows' built-in IP address management interfaces are decades old, a little buggy, and do not properly support DHCP and static IP coexistence. WindowsNetTool is intended as a third-party alternative that solves those issues, and as a home for additional small networking utilities.
 
 The app requires administrator privileges (UAC elevation is requested automatically) and is built with .NET Framework 4.8, which is preinstalled on Windows 10 v1903+ and Windows 11. The Release build is a small, portable, single-file exe with no runtime installation and no dependencies.
 
