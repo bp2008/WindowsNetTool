@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-namespace WindowsNetTool.Tools.WindowsTools
+namespace WindowsNetTool.Tools.LinksShortcuts
 {
 	/// <summary>
 	/// A launcher panel for Windows' built-in networking-related settings and control panel pages.
@@ -19,6 +19,7 @@ namespace WindowsNetTool.Tools.WindowsTools
 			AddLauncher("Internet Options (inetcpl.cpl)", NetworkPanels.OpenInternetOptions);
 			AddLauncher("Windows Defender Firewall", NetworkPanels.OpenFirewallControlPanel);
 			AddLauncher("Firewall Advanced Security (wf.msc)", NetworkPanels.OpenFirewallAdvancedSecurity);
+			AddLauncher("Resource Monitor - Network (resmon.exe)", NetworkPanels.OpenResourceMonitor);
 
 			AddHeading("Windows Settings");
 			AddLauncher("Network Status", () => NetworkPanels.OpenSettingsUri("ms-settings:network-status"));

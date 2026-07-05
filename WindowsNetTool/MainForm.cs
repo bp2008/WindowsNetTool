@@ -11,7 +11,7 @@ using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
 using WindowsNetTool.Tools.Traceroute;
-using WindowsNetTool.Tools.WindowsTools;
+using WindowsNetTool.Tools.LinksShortcuts;
 
 namespace WindowsNetTool
 {

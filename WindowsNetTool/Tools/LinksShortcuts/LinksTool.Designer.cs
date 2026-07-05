@@ -1,4 +1,4 @@
-namespace WindowsNetTool.Tools.WindowsTools
+namespace WindowsNetTool.Tools.LinksShortcuts
 {
 	partial class LinksTool
 	{

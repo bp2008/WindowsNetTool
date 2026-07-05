@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.NetworkCategory;
-using WindowsNetTool.Tools.WindowsTools;
+using WindowsNetTool.Tools.LinksShortcuts;
 
 namespace WindowsNetTool.Tools.IpConfig
 {

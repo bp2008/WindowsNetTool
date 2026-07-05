@@ -23,6 +23,8 @@
 		<Reference Include="Microsoft.CSharp" />
 		<!-- Framework assembly (not a NuGet package) providing DataContractJsonSerializer for AppSettings. -->
 		<Reference Include="System.Runtime.Serialization" />
+		<!-- Framework assembly (not a NuGet package) providing XmlDocument, used to edit Resource Monitor's config file. -->
+		<Reference Include="System.Xml" />
 	</ItemGroup>
 
 	<ItemGroup>

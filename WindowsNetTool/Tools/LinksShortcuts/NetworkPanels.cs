@@ -1,8 +1,11 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.NetworkInformation;
+using System.Text;
+using System.Xml;
 
-namespace WindowsNetTool.Tools.WindowsTools
+namespace WindowsNetTool.Tools.LinksShortcuts
 {
 	/// <summary>
 	/// Opens Windows' built-in networking-related settings panels and dialogs.
@@ -43,6 +46,57 @@ namespace WindowsNetTool.Tools.WindowsTools
 		public static void OpenSettingsUri(string uri)
 		{
 			Start(uri, null);
+		}
+
+		/// <summary>
+		/// Opens Windows' Resource Monitor on its Network tab.  Resmon opens on whichever tab was
+		/// focused when it last closed, a preference it stores in %LocalAppData%\Resmon.ResmonCfg,
+		/// so this best-effort edits that file before launching.  The tab ids in the file are
+		/// locale-independent.  If resmon is already running, launching it again just activates the
+		/// existing window and the file edit has no effect (resmon overwrites the file on close).
+		/// </summary>
+		public static void OpenResourceMonitor()
+		{
+			try
+			{
+				SetResourceMonitorStartupTab("Network");
+			}
+			catch (Exception)
+			{
+				// Best-effort only: if the config file can't be edited, Resource Monitor just
+				// opens on whatever tab it last remembered instead of the Network tab.
+			}
+			Start("resmon.exe", null);
+		}
+
+		/// <summary>
+		/// Rewrites %LocalAppData%\Resmon.ResmonCfg so the tab with the given locale-independent id
+		/// (e.g. "Network") is the focused one.  Does nothing if the file does not exist yet (first
+		/// ever launch) because resmon's tolerance of a minimal config file is unknown.
+		/// </summary>
+		private static void SetResourceMonitorStartupTab(string tabId)
+		{
+			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Resmon.ResmonCfg");
+			if (!File.Exists(path))
+				return;
+
+			XmlDocument doc = new XmlDocument();
+			doc.Load(path);
+
+			XmlElement target = null;
+			foreach (XmlElement tab in doc.DocumentElement.SelectNodes("tab"))
+			{
+				tab.RemoveAttribute("focused");
+				if (string.Equals(tab.GetAttribute("id"), tabId, StringComparison.OrdinalIgnoreCase))
+					target = tab;
+			}
+			if (target == null)
+				return;
+			target.SetAttribute("focused", "true");
+
+			// Resmon writes the file as UTF-8 without a byte order mark; match that.
+			using (XmlWriter writer = XmlWriter.Create(path, new XmlWriterSettings { Encoding = new UTF8Encoding(false) }))
+				doc.Save(writer);
 		}
 
 		private static void Start(string fileName, string arguments)
