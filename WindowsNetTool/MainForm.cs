@@ -12,6 +12,7 @@ using WindowsNetTool.Tools.Ndp;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.Ping;
 using WindowsNetTool.Tools.Routes;
+using WindowsNetTool.Tools.TcpTest;
 using WindowsNetTool.Tools.Traceroute;
 using WindowsNetTool.Tools.LinksShortcuts;
 
@@ -71,6 +72,7 @@ namespace WindowsNetTool
 			AddTool<PingTool>("Ping");
 			AddTool<TracerouteTool>("Traceroute");
 			AddTool<DnsLookupTool>("DNS Lookup");
+			AddTool<TcpTestTool>("TCP Connection Test");
 			AddTool<ArpTool>("ARP Viewer");
 			AddTool<NdpTool>("NDP Viewer");
 			AddTool<IpScannerTool>("IP Scanner");
