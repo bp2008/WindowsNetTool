@@ -6,6 +6,10 @@ Many of Windows' built-in IP address management interfaces are decades old, a li
 
 The app requires administrator privileges (UAC elevation is requested automatically) and is built with .NET Framework 4.8, which is preinstalled on Windows 10 v1903+ and Windows 11. The Release build is a small, portable, single-file exe with no runtime installation and no dependencies.
 
+## Download
+
+Get it from the [Releases](https://github.com/bp2008/WindowsNetTool/releases) section.  You can download it as a plain executable or zipped.
+
 ## Included Tools
 
 ### IP Configuration
