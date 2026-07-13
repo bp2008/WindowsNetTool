@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Ping;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.Ndp
 {
@@ -11,7 +12,7 @@ namespace WindowsNetTool.Tools.Ndp
 	/// Displays the system's NDP table (IPv6 neighbor cache) with live filtering by IP address
 	/// and by MAC address.  Activating an entry jumps to the Ping tool and begins pinging it.
 	/// </summary>
-	public partial class NdpTool : UserControl, IRefreshOnActivate
+	public partial class NdpTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		private class SortKey
 		{
@@ -31,6 +32,14 @@ namespace WindowsNetTool.Tools.Ndp
 		public NdpTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the NDP table as currently filtered and sorted.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("NDP Viewer");
+			content.AddListView(null, listNdp);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

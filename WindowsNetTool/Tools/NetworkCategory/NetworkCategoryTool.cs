@@ -2,14 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.NetworkCategory
 {
-	public partial class NetworkCategoryTool : UserControl, IRefreshOnActivate
+	public partial class NetworkCategoryTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		public NetworkCategoryTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the list of connected networks.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Network Category");
+			content.AddListView(null, listNetworks);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

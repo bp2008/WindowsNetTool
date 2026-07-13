@@ -105,7 +105,7 @@ namespace WindowsNetTool.Tools.IpConfig
 			this.btnRenameInterface.Text = "Rename...";
 			this.btnRenameInterface.UseVisualStyleBackColor = true;
 			this.btnRenameInterface.Click += new System.EventHandler(this.btnRenameInterface_Click);
-			// 
+			//
 			// btnRefresh
 			// 
 			this.btnRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));

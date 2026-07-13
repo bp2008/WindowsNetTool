@@ -12,6 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.TcpTest
 {
@@ -30,7 +31,7 @@ namespace WindowsNetTool.Tools.TcpTest
 	/// redirects, and report certificate problems without aborting the request.  Everything runs
 	/// as async continuations on the UI thread; no background threads are created.
 	/// </summary>
-	public partial class TcpTestTool : UserControl
+	public partial class TcpTestTool : UserControl, IExportableTool
 	{
 		/// <summary>Time allowed for each address's TCP connection attempt.</summary>
 		private const int ConnectTimeoutMs = 10000;
@@ -60,6 +61,14 @@ namespace WindowsNetTool.Tools.TcpTest
 		{
 			InitializeComponent();
 			UpdateModeControls();
+		}
+
+		/// <summary>Builds the Export button's content: the test log.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("TCP Connection Test");
+			content.AddText(null, txtLog.Text);
+			return content;
 		}
 
 		protected override void OnVisibleChanged(EventArgs e)

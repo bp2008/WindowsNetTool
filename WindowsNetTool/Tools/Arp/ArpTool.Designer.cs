@@ -146,7 +146,7 @@ namespace WindowsNetTool.Tools.Arp
 			this.btnPing.Text = "Ping Selected";
 			this.btnPing.UseVisualStyleBackColor = true;
 			this.btnPing.Click += new System.EventHandler(this.btnPing_Click);
-			// 
+			//
 			// lblCount
 			// 
 			this.lblCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));

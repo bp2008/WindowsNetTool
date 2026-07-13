@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 // The System.Net.NetworkInformation.Ping type must be aliased because the simple name "Ping"
 // binds to this tool's enclosing namespace.
 using NetPing = System.Net.NetworkInformation.Ping;
@@ -17,7 +18,7 @@ namespace WindowsNetTool.Tools.Ping
 	/// ping rate, and automatic stopping when the user switches to a different tool.  Other tools
 	/// can link into this one via MainForm.ActivateTool&lt;PingTool&gt;().StartPing(target).
 	/// </summary>
-	public partial class PingTool : UserControl
+	public partial class PingTool : UserControl, IExportableTool
 	{
 		/// <summary>
 		/// Time to wait for each echo reply, matching the Windows ping command's default.  Pings
@@ -50,6 +51,16 @@ namespace WindowsNetTool.Tools.Ping
 			trackRate.Maximum = RateIntervalsMs.Length - 1;
 			trackRate.Value = DefaultRateIndex;
 			lblRate.Text = DescribeRate(CurrentIntervalMs);
+		}
+
+		/// <summary>Builds the Export button's content: the ping log plus the current statistics line.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Ping");
+			content.AddText(null, txtLog.Text);
+			if (lblStats.Text.Length > 0)
+				content.AddText(null, "Statistics: " + lblStats.Text);
+			return content;
 		}
 
 		private int CurrentIntervalMs

@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
 using WindowsNetTool.Tools.DeviceList;
 using WindowsNetTool.Tools.DnsLookup;
+using WindowsNetTool.Tools.Export;
 using WindowsNetTool.Tools.HostsFile;
 using WindowsNetTool.Tools.IpConfig;
 using WindowsNetTool.Tools.IpScanner;
@@ -65,6 +66,10 @@ namespace WindowsNetTool
 			}
 
 			splitContainer.Panel2.ClientSizeChanged += Panel2_ClientSizeChanged;
+
+			// One Export button serves every tool; it exports whatever the active tool is showing
+			// and is disabled while the active tool has nothing exportable.
+			ExportMenu.Attach(btnExport, () => (activeTool as IExportableTool)?.BuildExportContent());
 
 			AddTool<IpConfigTool>("IP Configuration");
 			AddTool<NetworkCategoryTool>("Network Category");
@@ -223,6 +228,7 @@ namespace WindowsNetTool
 				created = true;
 			}
 			activeTool = entry.Instance;
+			btnExport.Enabled = activeTool is IExportableTool;
 			foreach (Control c in splitContainer.Panel2.Controls)
 				c.Visible = c == entry.Instance;
 			splitContainer.Panel2.AutoScrollPosition = Point.Empty;

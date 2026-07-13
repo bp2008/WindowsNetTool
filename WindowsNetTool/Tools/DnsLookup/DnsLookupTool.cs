@@ -5,6 +5,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.DnsLookup
 {
@@ -15,7 +16,7 @@ namespace WindowsNetTool.Tools.DnsLookup
 	/// servers with popular public resolvers (deduplicated), and accepts a custom server IP address
 	/// typed directly into it.
 	/// </summary>
-	public partial class DnsLookupTool : UserControl, IRefreshOnActivate
+	public partial class DnsLookupTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		/// <summary>Timeout for each UDP attempt and for the TCP fallback exchange.</summary>
 		private const int QueryTimeoutMs = 3000;
@@ -54,6 +55,14 @@ namespace WindowsNetTool.Tools.DnsLookup
 			comboType.Items.AddRange(new object[] { "A", "AAAA", "ANY", "CAA", "CNAME", "MX", "NS", "PTR", "SOA", "SRV", "TXT" });
 			comboType.SelectedIndex = 0;
 			PopulateServerList();
+		}
+
+		/// <summary>Builds the Export button's content: the lookup log.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("DNS Lookup");
+			content.AddText(null, txtLog.Text);
+			return content;
 		}
 
 		/// <summary>

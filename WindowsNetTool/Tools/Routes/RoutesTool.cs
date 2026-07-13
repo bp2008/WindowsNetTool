@@ -6,19 +6,28 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.Routes
 {
 	/// <summary>
 	/// Manages persistent IPv4 static routes (routes which survive reboots).
 	/// </summary>
-	public partial class RoutesTool : UserControl, IRefreshOnActivate
+	public partial class RoutesTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		private bool busy = false;
 
 		public RoutesTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the persistent static route table.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Static Routes");
+			content.AddListView(null, listRoutes);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

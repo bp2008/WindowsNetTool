@@ -9,12 +9,12 @@
 		<AssemblyName>WindowsNetTool</AssemblyName>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<ApplicationIcon>app-min.ico</ApplicationIcon>
-		<Version>1.4.0</Version>
+		<Version>1.5.0</Version>
 		<Product>WindowsNetTool</Product>
 		<Description>A collection of Windows networking utilities.</Description>
 		<Copyright>Copyright © 2026</Copyright>
-		<AssemblyVersion>1.4.0</AssemblyVersion>
-		<FileVersion>1.4.0</FileVersion>
+		<AssemblyVersion>1.5.0</AssemblyVersion>
+		<FileVersion>1.5.0</FileVersion>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 		<PackageIcon>app-min.png</PackageIcon>
 	</PropertyGroup>

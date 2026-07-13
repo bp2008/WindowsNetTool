@@ -111,7 +111,7 @@ namespace WindowsNetTool.Tools.NetworkCategory
 			this.btnRenameNetwork.Text = "Rename...";
 			this.btnRenameNetwork.UseVisualStyleBackColor = true;
 			this.btnRenameNetwork.Click += new System.EventHandler(this.btnRenameNetwork_Click);
-			// 
+			//
 			// lblSetChecked
 			// 
 			this.lblSetChecked.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));

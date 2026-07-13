@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.HostsFile
 {
 	/// <summary>
 	/// A simple notepad-like editor for the system hosts file.
 	/// </summary>
-	public partial class HostsFileTool : UserControl, IRefreshOnActivate, IHasUnsavedChanges
+	public partial class HostsFileTool : UserControl, IRefreshOnActivate, IHasUnsavedChanges, IExportableTool
 	{
 		private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "drivers", "etc", "hosts");
 
@@ -26,6 +27,14 @@ namespace WindowsNetTool.Tools.HostsFile
 		{
 			InitializeComponent();
 			lblHostsPath.Text = HostsPath;
+		}
+
+		/// <summary>Builds the Export button's content: the editor content (including unsaved edits).</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Hosts File");
+			content.AddText(HostsPath, txtHosts.Text);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

@@ -101,7 +101,7 @@ namespace WindowsNetTool.Tools.HostsFile
 			this.btnFlushDns.Text = "Flush DNS Cache";
 			this.btnFlushDns.UseVisualStyleBackColor = true;
 			this.btnFlushDns.Click += new System.EventHandler(this.btnFlushDns_Click);
-			// 
+			//
 			// lblHostsHint
 			// 
 			this.lblHostsHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));

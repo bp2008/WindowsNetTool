@@ -177,10 +177,10 @@ namespace WindowsNetTool.Tools.IpScanner
 			this.btnPing.Text = "Ping Selected";
 			this.btnPing.UseVisualStyleBackColor = true;
 			this.btnPing.Click += new System.EventHandler(this.btnPing_Click);
-			// 
+			//
 			// lblStatus
-			// 
-			this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+			//
+			this.lblStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.lblStatus.AutoEllipsis = true;
 			this.lblStatus.Location = new System.Drawing.Point(157, 531);

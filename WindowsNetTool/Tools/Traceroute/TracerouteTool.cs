@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Ping;
+using WindowsNetTool.Tools.Export;
 // The System.Net.NetworkInformation.Ping type must be aliased because the simple name "Ping"
 // binds to the WindowsNetTool.Tools.Ping namespace.
 using NetPing = System.Net.NetworkInformation.Ping;
@@ -24,7 +25,7 @@ namespace WindowsNetTool.Tools.Traceroute
 	/// reverse DNS lookups as hops are discovered.  Everything runs as async continuations on
 	/// the UI thread; no background threads are created.
 	/// </summary>
-	public partial class TracerouteTool : UserControl
+	public partial class TracerouteTool : UserControl, IExportableTool
 	{
 		/// <summary>Highest TTL probed, matching tracert's default maximum.</summary>
 		private const int MaxHops = 32;
@@ -70,6 +71,21 @@ namespace WindowsNetTool.Tools.Traceroute
 		public TracerouteTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the traced route and its status line.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Traceroute");
+			if (targetText != null)
+			{
+				string text = "Target: " + targetText;
+				if (lblStatus.Text.Length > 0)
+					text += Environment.NewLine + lblStatus.Text;
+				content.AddText(null, text);
+			}
+			content.AddListView(null, listHops);
+			return content;
 		}
 
 		protected override void OnVisibleChanged(EventArgs e)

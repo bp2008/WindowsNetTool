@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
 using WindowsNetTool.Tools.Ping;
+using WindowsNetTool.Tools.Export;
 // The System.Net.NetworkInformation.Ping type must be aliased because the simple name "Ping"
 // binds to the WindowsNetTool.Tools.Ping namespace.
 using NetPing = System.Net.NetworkInformation.Ping;
@@ -23,7 +24,7 @@ namespace WindowsNetTool.Tools.IpScanner
 	/// reverse DNS, but private addresses are only ever looked up on a local DNS server, never a
 	/// public resolver.
 	/// </summary>
-	public partial class IpScannerTool : UserControl, IRefreshOnActivate
+	public partial class IpScannerTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		/// <summary>
 		/// Time to wait for each echo reply.  Shorter than the Ping tool's 4000 ms because scan
@@ -108,6 +109,21 @@ namespace WindowsNetTool.Tools.IpScanner
 		public IpScannerTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the scanned subnet, status, and discovered hosts.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("IP Scanner");
+			if (listResults.Items.Count > 0)
+			{
+				string text = "Subnet: " + Ipv4Util.FromUint(scanNetwork) + "/" + scanPrefix;
+				if (lblStatus.Text.Length > 0)
+					text += Environment.NewLine + lblStatus.Text;
+				content.AddText(null, text);
+			}
+			content.AddListView(null, listResults);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

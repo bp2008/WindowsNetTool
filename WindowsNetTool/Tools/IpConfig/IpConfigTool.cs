@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.NetworkCategory;
 using WindowsNetTool.Tools.LinksShortcuts;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.IpConfig
 {
-	public partial class IpConfigTool : UserControl, IRefreshOnActivate
+	public partial class IpConfigTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		private bool busy = false;
 		private Dictionary<string, InterfaceExtraInfo> extraInfoByName = new Dictionary<string, InterfaceExtraInfo>();
@@ -24,6 +25,47 @@ namespace WindowsNetTool.Tools.IpConfig
 		public IpConfigTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>
+		/// Builds the Export button's content: every interface from the last scan with its info
+		/// summary, addresses, gateways, and DNS servers (the on-screen view shows one interface
+		/// at a time).
+		/// </summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("IP Configuration");
+			foreach (object item in comboInterfaces.Items)
+			{
+				Ipv4Interface iface = (Ipv4Interface)item;
+				content.AddText("Interface: " + iface.InterfaceName, BuildInfoText(iface));
+
+				List<string[]> addressRows = new List<string[]>(iface.IpAddresses.Count);
+				foreach (Ipv4Address addr in iface.IpAddresses)
+					addressRows.Add(new string[]
+					{
+						addr.Ip.ToString(),
+						addr.Mask != null ? addr.Mask.ToString() + " (/" + NetshIpv4.GetPrefixSizeOfMask(addr.Mask) + ")" : "",
+						addr.IsStatic ? "static" : "DHCP"
+					});
+				content.AddTable("IPv4 Addresses", new string[] { "Address", "Subnet Mask", "Source" }, addressRows);
+
+				List<string[]> gatewayRows = new List<string[]>(iface.Gateways.Count);
+				foreach (Ipv4Gateway gw in iface.Gateways)
+					gatewayRows.Add(new string[]
+					{
+						gw.Ip.ToString(),
+						gw.Metric == 0 ? "0 (automatic)" : gw.Metric.ToString(),
+						gw.IsStatic ? "static" : "dynamic"
+					});
+				content.AddTable("Default Gateways", new string[] { "Gateway", "Metric", "Source" }, gatewayRows);
+
+				List<string[]> dnsRows = new List<string[]>(iface.DnsServers.Count);
+				foreach (IPAddress dns in iface.DnsServers)
+					dnsRows.Add(new string[] { dns.ToString() });
+				content.AddTable("DNS Servers (source: " + (iface.DnsFromDhcp ? "DHCP" : "static") + ")", new string[] { "DNS Server" }, dnsRows);
+			}
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

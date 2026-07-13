@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsNetTool.Tools.Ping;
+using WindowsNetTool.Tools.Export;
 
 namespace WindowsNetTool.Tools.Arp
 {
@@ -11,7 +12,7 @@ namespace WindowsNetTool.Tools.Arp
 	/// Displays the system's ARP table (IPv4 neighbor cache) with live filtering by IP address
 	/// and by MAC address.  Activating an entry jumps to the Ping tool and begins pinging it.
 	/// </summary>
-	public partial class ArpTool : UserControl, IRefreshOnActivate
+	public partial class ArpTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		private class SortKey
 		{
@@ -31,6 +32,14 @@ namespace WindowsNetTool.Tools.Arp
 		public ArpTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>Builds the Export button's content: the ARP table as currently filtered and sorted.</summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("ARP Viewer");
+			content.AddListView(null, listArp);
+			return content;
 		}
 
 		protected override void OnLoad(EventArgs e)

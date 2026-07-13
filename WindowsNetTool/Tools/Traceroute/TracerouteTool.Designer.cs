@@ -83,7 +83,7 @@ namespace WindowsNetTool.Tools.Traceroute
 			this.btnStartStop.Text = "Start";
 			this.btnStartStop.UseVisualStyleBackColor = true;
 			this.btnStartStop.Click += new System.EventHandler(this.btnStartStop_Click);
-			// 
+			//
 			// listHops
 			// 
 			this.listHops.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 

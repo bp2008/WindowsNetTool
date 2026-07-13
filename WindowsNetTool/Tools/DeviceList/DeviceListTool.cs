@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using WindowsNetTool.Tools.Arp;
 using WindowsNetTool.Tools.Ndp;
 using WindowsNetTool.Tools.Ping;
+using WindowsNetTool.Tools.Export;
 // The System.Net.NetworkInformation.Ping type must be aliased because the simple name "Ping"
 // binds to the WindowsNetTool.Tools.Ping namespace.
 using NetPing = System.Net.NetworkInformation.Ping;
@@ -25,7 +26,7 @@ namespace WindowsNetTool.Tools.DeviceList
 	/// pairs with a detail pane showing everything known about the selected device, which keeps
 	/// the tool usable in a small viewport.
 	/// </summary>
-	public partial class DeviceListTool : UserControl, IRefreshOnActivate
+	public partial class DeviceListTool : UserControl, IRefreshOnActivate, IExportableTool
 	{
 		/// <summary>Time to wait for each echo reply; matches the IP Scanner's choice.</summary>
 		private const int ScanPingTimeoutMs = 1500;
@@ -152,6 +153,54 @@ namespace WindowsNetTool.Tools.DeviceList
 		public DeviceListTool()
 		{
 			InitializeComponent();
+		}
+
+		/// <summary>
+		/// Builds the Export button's content: one row per device as currently filtered and sorted,
+		/// with every known address included (the on-screen list abbreviates a device's addresses
+		/// to keep rows compact).
+		/// </summary>
+		public ExportableContent BuildExportContent()
+		{
+			ExportableContent content = new ExportableContent("Device List");
+			if (listDevices.Items.Count > 0)
+			{
+				string text = "Subnet: " + Ipv4Util.FromUint(scanNetwork) + "/" + scanPrefix;
+				if (lblStatus.Text.Length > 0)
+					text += Environment.NewLine + lblStatus.Text;
+				content.AddText(null, text);
+			}
+			string[] columns = { "Name", "IPv4 Addresses", "IPv6 Addresses", "MAC Address", "Ping", "Last Reply", "Info", "Interface" };
+			List<string[]> rows = new List<string[]>(listDevices.Items.Count);
+			foreach (ListViewItem item in listDevices.Items)
+			{
+				Device device = (Device)item.Tag;
+				rows.Add(new string[]
+				{
+					NameText(device),
+					JoinAddresses(device.Ipv4),
+					JoinAddresses(device.Ipv6),
+					device.MacAddress,
+					PingText(device),
+					LastReplyText(device),
+					InfoText(device),
+					device.InterfaceName
+				});
+			}
+			content.AddTable(null, columns, rows);
+			return content;
+		}
+
+		private static string JoinAddresses<T>(List<T> entries) where T : AddressEntry
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (AddressEntry entry in entries)
+			{
+				if (sb.Length > 0)
+					sb.Append(", ");
+				sb.Append(entry.Text);
+			}
+			return sb.ToString();
 		}
 
 		protected override void OnLoad(EventArgs e)

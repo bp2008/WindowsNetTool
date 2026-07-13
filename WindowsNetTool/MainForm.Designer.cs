@@ -30,6 +30,7 @@ namespace WindowsNetTool
 		{
 			this.splitContainer = new System.Windows.Forms.SplitContainer();
 			this.listBoxTools = new System.Windows.Forms.ListBox();
+			this.btnExport = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
 			this.splitContainer.Panel1.SuspendLayout();
 			this.splitContainer.SuspendLayout();
@@ -42,10 +43,11 @@ namespace WindowsNetTool
 			this.splitContainer.Location = new System.Drawing.Point(0, 0);
 			this.splitContainer.Margin = new System.Windows.Forms.Padding(4);
 			this.splitContainer.Name = "splitContainer";
-			// 
+			//
 			// splitContainer.Panel1
-			// 
+			//
 			this.splitContainer.Panel1.Controls.Add(this.listBoxTools);
+			this.splitContainer.Panel1.Controls.Add(this.btnExport);
 			this.splitContainer.Panel1MinSize = 120;
 			// 
 			// splitContainer.Panel2
@@ -68,7 +70,19 @@ namespace WindowsNetTool
 			this.listBoxTools.Size = new System.Drawing.Size(120, 838);
 			this.listBoxTools.TabIndex = 0;
 			this.listBoxTools.SelectedIndexChanged += new System.EventHandler(this.listBoxTools_SelectedIndexChanged);
-			// 
+			//
+			// btnExport
+			//
+			this.btnExport.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.btnExport.Enabled = false;
+			this.btnExport.Location = new System.Drawing.Point(0, 806);
+			this.btnExport.Margin = new System.Windows.Forms.Padding(4);
+			this.btnExport.Name = "btnExport";
+			this.btnExport.Size = new System.Drawing.Size(120, 32);
+			this.btnExport.TabIndex = 1;
+			this.btnExport.Text = "Export...";
+			this.btnExport.UseVisualStyleBackColor = true;
+			//
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -91,5 +105,6 @@ namespace WindowsNetTool
 
 		private System.Windows.Forms.SplitContainer splitContainer;
 		private System.Windows.Forms.ListBox listBoxTools;
+		private System.Windows.Forms.Button btnExport;
 	}
 }
